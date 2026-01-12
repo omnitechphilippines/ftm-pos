@@ -118,7 +118,7 @@ class ProductsView extends GetView<ProductsController> {
           children: <Widget>[
             const SizedBox(height: 4),
             Text('Code: ${product.code}'),
-            Text('Price: ₱${product.sellingPrice.toStringAsFixed(2)}'),
+            Text('Price: ₱ ${product.sellingPrice.toStringAsFixed(2)}'),
             Row(
               children: <Widget>[
                 Text(
@@ -178,7 +178,12 @@ class ProductsView extends GetView<ProductsController> {
   void _showProductDialog(ProductsController controller, {ProductModel? product}) {
     final bool isEditing = product != null;
 
+    if (!isEditing) {
+      controller.clearForm();
+    }
+
     Get.dialog(
+      barrierDismissible: false,
       Builder(
         builder: (BuildContext context) {
           return Dialog(
@@ -199,7 +204,7 @@ class ProductsView extends GetView<ProductsController> {
                         IconButton(
                           icon: const Icon(Icons.close),
                           onPressed: () {
-                            controller.clearForm();
+                            // controller.clearForm();
                             Get.back();
                           },
                         ),
@@ -260,7 +265,7 @@ class ProductsView extends GetView<ProductsController> {
                             decoration: InputDecoration(
                               labelText: 'Original Price *',
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                              prefixIcon: const Icon(Icons.attach_money),
+                              prefixIcon: const Text('₱', style: TextStyle(fontSize: 24), textAlign: .center),
                             ),
                           ),
                         ),
@@ -295,7 +300,6 @@ class ProductsView extends GetView<ProductsController> {
                     // Weight
                     TextField(
                       controller: controller.weightController,
-                      keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: 'Weight (Optional)',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -331,13 +335,7 @@ class ProductsView extends GetView<ProductsController> {
                       () => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              const Text('Product Image (Optional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                              TextButton.icon(onPressed: () => controller.showImagePickerOptions(), icon: Icon(controller.selectedImage.value != null ? Icons.edit : Icons.add_photo_alternate, size: 20), label: Text(controller.selectedImage.value != null ? 'Change Image' : 'Add Image')),
-                            ],
-                          ),
+                          const Text('Product Image (Optional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
                           if (controller.selectedImage.value != null)
                             Container(
@@ -353,21 +351,24 @@ class ProductsView extends GetView<ProductsController> {
                               ),
                             )
                           else
-                            Container(
-                              width: double.infinity,
-                              height: 150,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
-                                color: Colors.grey[100],
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Icon(Icons.image_outlined, size: 48, color: Colors.grey[400]),
-                                  const SizedBox(height: 8),
-                                  Text('No image selected', style: TextStyle(color: Colors.grey[600])),
-                                ],
+                            InkWell(
+                              onTap: () => controller.showImagePickerOptions(),
+                              child: Container(
+                                width: double.infinity,
+                                height: 150,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
+                                  color: Colors.grey[100],
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: <Widget>[
+                                    Icon(Icons.image_outlined, size: 48, color: Colors.grey[400]),
+                                    const SizedBox(height: 8),
+                                    Text('No image selected', style: TextStyle(color: Colors.grey[600])),
+                                  ],
+                                ),
                               ),
                             ),
                         ],
@@ -381,8 +382,8 @@ class ProductsView extends GetView<ProductsController> {
                       children: <Widget>[
                         TextButton(
                           onPressed: () {
-                            controller.clearForm();
                             Get.back();
+                            // controller.clearForm();
                           },
                           child: const Text('Cancel'),
                         ),

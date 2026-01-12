@@ -335,9 +335,7 @@ class ProductsController extends GetxController {
   }
 
   // Initialize scanner
-  void initializeScanner() {
-    scannerController = MobileScannerController(detectionSpeed: DetectionSpeed.normal, facing: CameraFacing.back);
-  }
+  void initializeScanner() => scannerController = MobileScannerController(detectionSpeed: DetectionSpeed.normal, facing: CameraFacing.back);
 
   // Dispose scanner
   void disposeScanner() {
