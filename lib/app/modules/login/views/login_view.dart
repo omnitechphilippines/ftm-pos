@@ -156,7 +156,7 @@ class LoginView extends GetView<LoginController> {
         padding: const EdgeInsets.all(8.0),
         child: Obx(
           () => Text(
-            controller.packageInfo.value == null ? '' : 'V${controller.packageInfo.value?.version}',
+            controller.packageInfo.value == null ? '' : 'V${controller.packageInfo.value?.version}+${controller.packageInfo.value?.buildNumber}',
             textAlign: TextAlign.center,
             style: const TextStyle(color: Color(0xFF8D8D90)),
           ),
