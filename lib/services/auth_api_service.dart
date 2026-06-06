@@ -3,11 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AuthApiService {
   final SupabaseClient supabase = Supabase.instance.client;
   Future<Map<String, dynamic>> login(String userName, String password) async {
-    final PostgrestList response = await supabase
-        .from('users_master')
-        .select()
-        .eq('user_name', userName)
-        .eq('password', password);
+    final PostgrestList response = await supabase.from('users_master').select().eq('user_name', userName).eq('password', password);
     return response != <dynamic>[] ? response[0] : <String, dynamic>{};
   }
   // static const String baseUrl = 'https://nodered-omnitech.onrender.com/api/v1/login';
