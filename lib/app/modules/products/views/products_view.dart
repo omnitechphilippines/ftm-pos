@@ -178,10 +178,6 @@ class ProductsView extends GetView<ProductsController> {
   void _showProductDialog(ProductsController controller, {ProductModel? product}) {
     final bool isEditing = product != null;
 
-    if (!isEditing) {
-      controller.clearForm();
-    }
-
     Get.dialog(
       barrierDismissible: false,
       Builder(
@@ -204,7 +200,7 @@ class ProductsView extends GetView<ProductsController> {
                         IconButton(
                           icon: const Icon(Icons.close),
                           onPressed: () {
-                            // controller.clearForm();
+                            controller.clearForm();
                             Get.back();
                           },
                         ),
@@ -229,12 +225,10 @@ class ProductsView extends GetView<ProductsController> {
                         IconButton(
                           icon: const Icon(Icons.qr_code_scanner, color: Colors.blue),
                           onPressed: () {
-                            Get.back();
                             _showScannerDialog(
                               controller,
                               onScanned: (String code) {
                                 controller.codeController.text = code;
-                                _showProductDialog(controller, product: product);
                               },
                             );
                           },
@@ -377,19 +371,21 @@ class ProductsView extends GetView<ProductsController> {
                     const SizedBox(height: 16),
 
                     // Action Buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Get.back();
-                            // controller.clearForm();
-                          },
-                          child: const Text('Cancel'),
-                        ),
-                        const SizedBox(width: 12),
-                        Obx(
-                          () => ElevatedButton(
+                    Obx(
+                      () => Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: <Widget>[
+                          TextButton(
+                            onPressed: controller.isLoading.value
+                                ? null
+                                : () {
+                                    Get.back();
+                                    controller.clearForm();
+                                  },
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
                             onPressed: controller.isLoading.value
                                 ? null
                                 : () {
@@ -404,10 +400,10 @@ class ProductsView extends GetView<ProductsController> {
                               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
-                            child: controller.isLoading.value ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(isEditing ? 'Update' : 'Add Product'),
+                            child: controller.isLoading.value ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(isEditing ? 'Update Product' : 'Add Product'),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -483,6 +479,7 @@ class ProductsView extends GetView<ProductsController> {
                         } else {
                           // Search for existing product
                           final ProductModel? product = await controller.searchProductByCode(code);
+                          // controller.searchQuery.value
                           if (product != null) {
                             controller.loadProductToForm(product);
                             _showProductDialog(controller, product: product);
