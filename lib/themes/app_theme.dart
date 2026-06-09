@@ -9,6 +9,6 @@ ThemeData get lightTheme => ThemeData(
 ThemeData get darkTheme => ThemeData(
   primaryColor: const Color(0xFFFFFFFF),
   colorScheme: const ColorScheme.dark(primary: Color(0xFFFFFFFF), secondary: Color(0xFF000000), surface: Color(0xFF121212), error: Color(0xFFCF6679), onPrimary: Color(0xFF000000), onSecondary: Color(0xFFFFFFFF), onSurface: Color(0xFFFFFFFF), onError: Color(0xFF000000)),
-  scaffoldBackgroundColor: const Color(0xFF212332),
+  scaffoldBackgroundColor: const Color(0xFF1F212C),
   canvasColor: const Color(0xFF2A2D3E),
 );

@@ -7,8 +7,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final String? image;
   final List<Widget>? actions;
+  final Widget? leading;
 
-  const CustomAppBar({super.key, required this.title, this.image, this.actions});
+  const CustomAppBar({super.key, required this.title, this.image, this.actions, this.leading});
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +30,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       //   // IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
       // ],
       actions: allActions,
+      leading: leading,
     );
   }
 

@@ -3,14 +3,14 @@ import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../models/product_model.dart';
 
 class ProductsController extends GetxController {
-  final SupabaseClient supabase = Supabase.instance.client;
+  final SupabaseClient _supabase = Supabase.instance.client;
   final ImagePicker _imagePicker = ImagePicker();
 
   // Observable lists and states
@@ -62,12 +62,12 @@ class ProductsController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final PostgrestList response = await supabase.from('products_master').select().order('updated_at', ascending: false);
+      final PostgrestList response = await _supabase.from('products_master').select().order('updated_at', ascending: false);
       products.value = response.map((Map<String, dynamic> json) => ProductModel.fromJson(json)).toList();
       filteredProducts.value = products;
     } catch (e) {
       errorMessage.value = 'Failed to fetch products: $e';
-      Get.snackbar('Error', errorMessage.value, snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, duration: const Duration(seconds: 5));
+      Get.snackbar('Error', errorMessage.value, snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, duration: const Duration(seconds: 5), borderRadius: 0);
     } finally {
       isLoading.value = false;
     }
@@ -90,10 +90,10 @@ class ProductsController extends GetxController {
       if (image != null) {
         final Uint8List imageBytes = await image.readAsBytes();
         selectedImage.value = imageBytes;
-        Get.snackbar('Success', 'Image captured successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white);
+        Get.snackbar('Success', 'Image captured successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white, borderRadius: 0);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to capture image: $e', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Failed to capture image: $e', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
     }
   }
 
@@ -106,11 +106,11 @@ class ProductsController extends GetxController {
         final Uint8List? imageBytes = result.files.single.bytes;
         if (imageBytes != null) {
           selectedImage.value = imageBytes;
-          Get.snackbar('Success', 'Image selected successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white);
+          Get.snackbar('Success', 'Image selected successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white, borderRadius: 0);
         }
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to pick image: $e', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Failed to pick image: $e', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
     }
   }
 
@@ -151,7 +151,7 @@ class ProductsController extends GetxController {
                 onTap: () {
                   Get.back();
                   selectedImage.value = null;
-                  Get.snackbar('Success', 'Image removed', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white);
+                  Get.snackbar('Success', 'Image removed', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white, borderRadius: 0);
                 },
               ),
           ],
@@ -179,12 +179,12 @@ class ProductsController extends GetxController {
         quantity: int.parse(quantityController.text),
         weight: weightController.text.trim(),
         expiryDate: expiryDate.value,
-        image: selectedImage.value,
+        image: selectedImage.value!,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
-      await supabase.from('products_master').insert(product.toJson());
+      await _supabase.from('products_master').insert(product.toJson());
 
       products.insert(0, product);
       filterProducts();
@@ -192,10 +192,10 @@ class ProductsController extends GetxController {
       clearForm();
       Get.back();
 
-      Get.snackbar('Success', 'Product added successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white);
+      Get.snackbar('Success', 'Product added successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white, borderRadius: 0);
     } catch (e) {
       errorMessage.value = 'Failed to create product: $e';
-      Get.snackbar('Error', errorMessage.value, snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', errorMessage.value, snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
     } finally {
       isLoading.value = false;
     }
@@ -220,12 +220,12 @@ class ProductsController extends GetxController {
         quantity: int.parse(quantityController.text),
         weight: weightController.text.isNotEmpty ? weightController.text.trim() : '',
         expiryDate: expiryDate.value,
-        image: selectedImage.value,
+        image: selectedImage.value!,
         createdAt: products.firstWhere((ProductModel p) => p.id == productId).createdAt,
         updatedAt: DateTime.now(),
       );
 
-      await supabase.from('products_master').update(updatedProduct.toJson()).eq('id', productId);
+      await _supabase.from('products_master').update(updatedProduct.toJson()).eq('id', productId);
 
       final int index = products.indexWhere((ProductModel p) => p.id == productId);
       if (index != -1) {
@@ -236,10 +236,10 @@ class ProductsController extends GetxController {
       clearForm();
       Get.back();
 
-      Get.snackbar('Success', 'Product updated successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white);
+      Get.snackbar('Success', 'Product updated successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white, borderRadius: 0);
     } catch (e) {
       errorMessage.value = 'Failed to update product: $e';
-      Get.snackbar('Error', errorMessage.value, snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', errorMessage.value, snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
     } finally {
       isLoading.value = false;
     }
@@ -251,15 +251,15 @@ class ProductsController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      await supabase.from('products_master').delete().eq('id', productId);
+      await _supabase.from('products_master').delete().eq('id', productId);
 
       products.removeWhere((ProductModel p) => p.id == productId);
       filterProducts();
 
-      Get.snackbar('Success', 'Product deleted successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white);
+      Get.snackbar('Success', 'Product deleted successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white, borderRadius: 0);
     } catch (e) {
       errorMessage.value = 'Failed to delete product: $e';
-      Get.snackbar('Error', errorMessage.value, snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', errorMessage.value, snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
     } finally {
       isLoading.value = false;
     }
@@ -268,7 +268,7 @@ class ProductsController extends GetxController {
   // Search product by barcode
   Future<ProductModel?> searchProductByCode(String code) async {
     try {
-      final PostgrestMap? response = await supabase.from('products_master').select().eq('code', code).maybeSingle();
+      final PostgrestMap? response = await _supabase.from('products_master').select().eq('code', code).maybeSingle();
 
       if (response != null) {
         return ProductModel.fromJson(response);
@@ -307,27 +307,32 @@ class ProductsController extends GetxController {
   // Validate form
   bool _validateForm() {
     if (codeController.text.trim().isEmpty) {
-      Get.snackbar('Error', 'Product code is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Product code is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
       return false;
     }
 
     if (nameController.text.trim().isEmpty) {
-      Get.snackbar('Error', 'Product name is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Product name is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
       return false;
     }
 
     if (sellingPriceController.text.trim().isEmpty || double.tryParse(sellingPriceController.text) == null) {
-      Get.snackbar('Error', 'Valid selling price is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Valid selling price is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
       return false;
     }
 
     if (originalPriceController.text.trim().isEmpty || double.tryParse(originalPriceController.text) == null) {
-      Get.snackbar('Error', 'Valid original price is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Valid original price is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
       return false;
     }
 
     if (quantityController.text.trim().isEmpty || int.tryParse(quantityController.text) == null) {
-      Get.snackbar('Error', 'Valid quantity is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Valid quantity is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
+      return false;
+    }
+
+    if (selectedImage.value == null) {
+      Get.snackbar('Error', 'Image is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
       return false;
     }
 

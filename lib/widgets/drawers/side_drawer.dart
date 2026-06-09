@@ -54,19 +54,16 @@ class _HoverListTileState extends State<HoverListTile> {
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: Container(
-        decoration: BoxDecoration(color: isActive ? const Color(0xFF4D4F5B) : (_isHovered ? const Color(0xFF4D4F5B) : Colors.transparent)),
-        child: ListTile(
-          leading: Icon(widget.icon, size: 26, color: isActive ? Colors.white : (_isHovered ? Colors.white : const Color(0xFF8B8D96))),
-          title: Text(widget.title, style: TextStyle(color: isActive ? Colors.white : (_isHovered ? Colors.white : const Color(0xFF8B8D96)))),
-          onTap: () async {
-            if (widget.route == Routes.LOGIN) {
-              Get.find<AuthService>().logout();
-            } else if (!isActive) {
-              Get.toNamed(widget.route);
-            }
-          },
-        ),
+      child: ListTile(
+        leading: Icon(widget.icon, size: 26, color: isActive ? Colors.white : (_isHovered ? Colors.white : const Color(0xFF8B8D96))),
+        title: Text(widget.title, style: TextStyle(color: isActive ? Colors.white : (_isHovered ? Colors.white : const Color(0xFF8B8D96)))),
+        onTap: () async {
+          if (widget.route == Routes.LOGIN) {
+            Get.find<AuthService>().logout();
+          } else if (!isActive) {
+            Get.toNamed(widget.route);
+          }
+        },
       ),
     );
   }

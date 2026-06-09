@@ -4,13 +4,13 @@ import 'package:get/get.dart';
 import '../../app/modules/orders/controllers/orders_controller.dart';
 import '../../models/product_model.dart';
 
-class ProductCard extends StatelessWidget {
+class OrderCard extends StatelessWidget {
   final ProductModel product;
-  const ProductCard({super.key, required this.product});
+  const OrderCard({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<OrdersController>();
+    final OrdersController controller = Get.find<OrdersController>();
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -29,17 +29,12 @@ class ProductCard extends StatelessWidget {
                 decoration: BoxDecoration(color: const Color(0xFF4D4F5B), borderRadius: BorderRadius.circular(16)),
                 child: Stack(
                   children: <Widget>[
-                    Center(child: Image.memory(product.image!)),
+                    Center(child: Image.memory(product.image)),
                     const Positioned(top: 0, right: 0, child: Icon(Icons.more_vert, size: 16, color: Colors.white)),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            // Text(
-            //   product.category.toUpperCase(),
-            //   style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[500], letterSpacing: 1.0),
-            // ),
             const SizedBox(height: 4),
             Text(
               product.name,
@@ -56,15 +51,24 @@ class ProductCard extends StatelessWidget {
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent),
                 ),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    Container(
-                      decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
-                      child: IconButton(icon: const Icon(Icons.remove), onPressed: () => controller.cart.value--, tooltip: 'Deduct'),
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Container(
+                        decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+                        child: IconButton(icon: const Icon(Icons.remove, size: 18), onPressed: () => controller.cart.value--, tooltip: 'Deduct', splashRadius: 18),
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
-                      child: IconButton(icon: const Icon(Icons.add), onPressed: () => controller.cart.value++, tooltip: 'Add'),
+                    const SizedBox(width: 4),
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Container(
+                        decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+                        child: IconButton(icon: const Icon(Icons.add, size: 18), onPressed: () => controller.cart.value++, tooltip: 'Add', splashRadius: 18),
+                      ),
                     ),
                   ],
                 ),

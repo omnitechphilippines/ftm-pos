@@ -35,7 +35,6 @@ class ProductsView extends GetView<ProductsController> {
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 filled: true,
-                // fillColor: Colors.grey[100],
               ),
             ),
           ),
@@ -44,7 +43,7 @@ class ProductsView extends GetView<ProductsController> {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value && controller.products.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
+                return _buildLoadingIndicator();
               }
 
               if (controller.filteredProducts.isEmpty) {
@@ -60,22 +59,32 @@ class ProductsView extends GetView<ProductsController> {
                 );
               }
 
-              return RefreshIndicator(
-                onRefresh: controller.fetchProducts,
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: controller.filteredProducts.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final ProductModel product = controller.filteredProducts[index];
-                    return _buildProductCard(product, controller);
-                  },
-                ),
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: controller.filteredProducts.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final ProductModel product = controller.filteredProducts[index];
+                  return _buildProductCard(product, controller);
+                },
               );
             }),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(onPressed: () => _showProductDialog(controller), icon: const Icon(Icons.add), label: const Text('Add Product'), backgroundColor: Colors.blue),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text('Loading products...', style: TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
     );
   }
 
@@ -92,26 +101,18 @@ class ProductsView extends GetView<ProductsController> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        leading: product.image != null
-            ? InkWell(
-                onTap: () => Get.dialog(
-                  Dialog(
-                    insetPadding: const EdgeInsets.all(16),
-                    child: InteractiveViewer(child: Image.memory(product.image!)),
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.memory(product.image!, width: 56, height: 56, fit: BoxFit.contain),
-                ),
-              )
-            : CircleAvatar(
-                backgroundColor: isExpired ? Colors.red : (isExpiringSoon ? Colors.orange : Colors.blue),
-                child: Text(
-                  product.name[0].toUpperCase(),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ),
+        leading: InkWell(
+          onTap: () => Get.dialog(
+            Dialog(
+              insetPadding: const EdgeInsets.all(16),
+              child: InteractiveViewer(child: Image.memory(product.image)),
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.memory(product.image, width: 56, height: 56, fit: BoxFit.contain),
+          ),
+        ),
         title: Text(product.weight!.isNotEmpty ? '${product.name} - ${product.weight}' : product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,19 +124,14 @@ class ProductsView extends GetView<ProductsController> {
               children: <Widget>[
                 Text(
                   'Stock: ${product.quantity}',
-                  style: TextStyle(color: isLowStock ? Colors.red : Colors.black87, fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal),
+                  style: TextStyle(color: isLowStock ? Colors.red : Colors.white24, fontWeight: FontWeight.bold),
                 ),
-                if (isLowStock)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: Icon(Icons.warning, color: Colors.red, size: 16),
-                  ),
               ],
             ),
             if (product.expiryDate != null)
               Text(
                 'Expires: ${DateFormat('MMM dd, yyyy').format(product.expiryDate!)}',
-                style: TextStyle(color: isExpired ? Colors.red : (isExpiringSoon ? Colors.orange : Colors.black87), fontWeight: (isExpired || isExpiringSoon) ? FontWeight.bold : FontWeight.normal),
+                style: TextStyle(color: isExpired ? Colors.red : (isExpiringSoon ? Colors.orange : Colors.white38), fontWeight: (isExpired || isExpiringSoon) ? FontWeight.bold : FontWeight.normal),
               ),
           ],
         ),
@@ -185,7 +181,7 @@ class ProductsView extends GetView<ProductsController> {
           return Dialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Container(
-              width: Get.mediaQuery.size.width * 0.9,
+              width: Get.size.width * 0.9,
               constraints: const BoxConstraints(maxWidth: 600),
               padding: const EdgeInsets.all(24),
               child: SingleChildScrollView(
@@ -318,7 +314,7 @@ class ProductsView extends GetView<ProductsController> {
                             prefixIcon: const Icon(Icons.calendar_today),
                             suffixIcon: controller.expiryDate.value != null ? IconButton(icon: const Icon(Icons.clear), onPressed: () => controller.expiryDate.value = null) : null,
                           ),
-                          child: Text(controller.expiryDate.value != null ? DateFormat('MMM dd, yyyy').format(controller.expiryDate.value!) : 'Select date', style: TextStyle(color: controller.expiryDate.value != null ? Colors.black : Colors.grey)),
+                          child: Text(controller.expiryDate.value != null ? DateFormat('MMM dd, yyyy').format(controller.expiryDate.value!) : 'Select date', style: TextStyle(color: controller.expiryDate.value != null ? Colors.white : Colors.grey)),
                         ),
                       ),
                     ),
@@ -329,19 +325,22 @@ class ProductsView extends GetView<ProductsController> {
                       () => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          const Text('Product Image (Optional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                          const Text('Product Image', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
                           if (controller.selectedImage.value != null)
-                            Container(
-                              width: double.infinity,
-                              height: 200,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey[300]!),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.memory(controller.selectedImage.value!, fit: BoxFit.contain),
+                            InkWell(
+                              onTap: () => controller.showImagePickerOptions(),
+                              child: Container(
+                                width: double.infinity,
+                                height: 200,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.memory(controller.selectedImage.value!, fit: BoxFit.contain),
+                                ),
                               ),
                             )
                           else
@@ -479,7 +478,6 @@ class ProductsView extends GetView<ProductsController> {
                         } else {
                           // Search for existing product
                           final ProductModel? product = await controller.searchProductByCode(code);
-                          // controller.searchQuery.value
                           if (product != null) {
                             controller.loadProductToForm(product);
                             _showProductDialog(controller, product: product);

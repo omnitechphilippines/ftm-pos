@@ -7,14 +7,14 @@ class ProductModel {
   final String name;
   final double originalPrice;
   final double sellingPrice;
-  final int quantity;
+  int quantity;
   final String? weight;
   final DateTime? expiryDate;
-  final Uint8List? image;
+  final Uint8List image;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  ProductModel({required this.id, required this.code, required this.name, required this.originalPrice, required this.sellingPrice, required this.quantity, this.weight, this.expiryDate, this.image, required this.createdAt, required this.updatedAt});
+  ProductModel({required this.id, required this.code, required this.name, required this.originalPrice, required this.sellingPrice, required this.quantity, this.weight, this.expiryDate, required this.image, required this.createdAt, required this.updatedAt});
 
   factory ProductModel.fromJson(Map<String, dynamic> json) => ProductModel(
     id: json['id'],
@@ -50,10 +50,10 @@ class ProductModel {
     'selling_price': sellingPrice,
     'quantity': quantity,
     'weight': weight,
-    'expiry_date': expiryDate?.toIso8601String(),
+    'expiry_date': expiryDate?.toUtc().toIso8601String(),
     'image': image,
-    'created_at': createdAt.toIso8601String(),
-    'updated_at': updatedAt.toIso8601String(),
+    'created_at': createdAt.toUtc().toIso8601String(),
+    'updated_at': updatedAt.toUtc().toIso8601String(),
   };
 
   ProductModel copyWith({String? id, String? code, String? name, double? sellingPrice, double? originalPrice, int? quantity, String? weight, DateTime? expiryDate, Uint8List? image, DateTime? createdAt, DateTime? updatedAt}) => ProductModel(
