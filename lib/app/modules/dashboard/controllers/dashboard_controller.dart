@@ -71,7 +71,7 @@ class DashboardController extends GetxController {
       final dynamic analyticsPayload = await _supabase.rpc('get_homepage_dashboard_stats');
       return analyticsPayload != null ? analyticsPayload['top_products'] ?? <dynamic>[] : <dynamic>[];
     } catch (e) {
-      print('Failed to pull complete product leaderboard: $e');
+      Get.snackbar('Error', 'Failed to pull complete product leaderboard: $e', backgroundColor: Colors.red, colorText: Colors.white);
       return <dynamic>[];
     }
   }

@@ -12,14 +12,14 @@ class SideDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: const Color(0xFF2A2D3E),
+      // backgroundColor: const Color(0xFF2A2D3E),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       child: ListView(
         children: <Widget>[
           DrawerHeader(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: <Color>[Color(0xFF2A2D3E), Color(0xFF2A2D3E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-            ),
+            // decoration: const BoxDecoration(
+            //   gradient: LinearGradient(colors: <Color>[Color(0xFF2A2D3E), Color(0xFF2A2D3E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+            // ),
             child: SizedBox(width: 32, child: Image.asset('assets/images/logo.png')),
           ),
           HoverListTile(icon: Icons.dashboard_outlined, title: 'Dashboard', route: Routes.DASHBOARD, currentRoute: currentRoute),
@@ -51,12 +51,20 @@ class _HoverListTileState extends State<HoverListTile> {
   Widget build(BuildContext context) {
     final bool isActive = widget.currentRoute == widget.route;
 
+    // Determine the background color based on active/hover state
+    final Color currentTileColor = isActive ? const Color(0xFF4D4F5B) : (_isHovered ? const Color(0xFF4D4F5B) : Colors.transparent);
+
+    // Determine the element color based on active/hover state
+    final Color contentColor = (isActive || _isHovered) ? Colors.white : const Color(0xFF8B8D96);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: ListTile(
-        leading: Icon(widget.icon, size: 26, color: isActive ? Colors.white : (_isHovered ? Colors.white : const Color(0xFF8B8D96))),
-        title: Text(widget.title, style: TextStyle(color: isActive ? Colors.white : (_isHovered ? Colors.white : const Color(0xFF8B8D96)))),
+        // FIXED: Feeding color directly into tileColor preserves InkSplashes without throwing exceptions
+        tileColor: currentTileColor,
+        leading: Icon(widget.icon, size: 26, color: contentColor),
+        title: Text(widget.title, style: TextStyle(color: contentColor)),
         onTap: () async {
           if (widget.route == Routes.LOGIN) {
             Get.find<AuthService>().logout();

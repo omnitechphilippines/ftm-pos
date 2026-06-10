@@ -45,7 +45,6 @@ class ReportsController extends GetxController {
       reportSummaryLines.value = response;
     } catch (e) {
       Get.snackbar('Error', 'Failed to load report summary: $e', backgroundColor: Colors.red, colorText: Colors.white);
-      print('Failed to load report summary: $e');
     } finally {
       isLoading.value = false;
     }
@@ -81,7 +80,6 @@ class ReportsController extends GetxController {
       detailedOrdersForPeriod.value = response.map((dynamic item) => OrderModel.fromJson(item)).toList();
     } catch (e) {
       Get.snackbar('Error', 'Failed to retrieve period orders: $e');
-      print('Failed to retrieve period orders: $e');
     } finally {
       isLoading.value = false;
     }

@@ -15,92 +15,97 @@ class OrdersView extends GetView<OrdersController> {
   @override
   Widget build(BuildContext context) {
     final String currentRoute = Get.currentRoute.isNotEmpty ? Get.currentRoute : (Get.routing.current.isNotEmpty ? Get.routing.current : ModalRoute.of(context)?.settings.name ?? '/');
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Orders',
-        actions: <Widget>[
-          IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: () => _showScannerDialog(), tooltip: 'Scan Barcode'),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: () => controller.fetchProducts(), tooltip: 'Refresh'),
-          Obx(
-            () => Stack(
-              children: <Widget>[
-                IconButton(icon: const Icon(Icons.shopping_cart), onPressed: () => _showReceiptDialog(), tooltip: 'Cart'),
-                if (controller.cart.value > 0)
-                  Positioned(
-                    right: 0,
-                    bottom: -1,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                      constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-                      child: Center(
-                        child: Text(
-                          controller.cart.value.toString(),
-                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
+    return Obx(
+      () => Scaffold(
+        appBar: CustomAppBar(
+          title: 'Orders',
+          actions: controller.isLoading.value
+              ? null
+              : <Widget>[
+                  IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: () => _showScannerDialog(), tooltip: 'Scan Barcode'),
+                  IconButton(icon: const Icon(Icons.refresh), onPressed: () => controller.fetchProducts(), tooltip: 'Refresh Products'),
+                  Obx(
+                    () => Stack(
+                      children: <Widget>[
+                        IconButton(icon: const Icon(Icons.shopping_cart), onPressed: () => _showReceiptDialog(), tooltip: 'Cart'),
+                        if (controller.cart.value > 0)
+                          Positioned(
+                            right: 0,
+                            bottom: -1,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                              constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                              child: Center(
+                                child: Text(
+                                  controller.cart.value.toString(),
+                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+        ),
+        drawer: SideDrawer(currentRoute: currentRoute),
+        body:
+            controller
+                .isLoading
+                .value // && controller.products.isEmpty
+            ? _buildLoadingIndicator()
+            : Column(
+                children: <Widget>[
+                  // Search Bar
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: TextField(
+                      onChanged: (String value) => controller.searchQuery.value = value,
+                      decoration: InputDecoration(
+                        hintText: 'Search by name or code...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        filled: true,
                       ),
                     ),
                   ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      drawer: SideDrawer(currentRoute: currentRoute),
-      body: Column(
-        children: <Widget>[
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              onChanged: (String value) => controller.searchQuery.value = value,
-              decoration: InputDecoration(
-                hintText: 'Search by name or code...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                filled: true,
-              ),
-            ),
-          ),
 
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value && controller.products.isEmpty) {
-                return _buildLoadingIndicator();
-              }
+                  Expanded(
+                    child: Obx(() {
+                      if (controller.filteredProducts.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[400]),
+                              const SizedBox(height: 16),
+                              Text('No products found', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+                            ],
+                          ),
+                        );
+                      }
 
-              if (controller.filteredProducts.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text('No products found', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
-                    ],
+                      return LayoutBuilder(
+                        builder: (BuildContext context, BoxConstraints constraints) {
+                          final double width = constraints.maxWidth;
+                          final int crossAxisCount = (width / 250).floor().clamp(2, 6);
+
+                          return GridView.builder(
+                            itemCount: controller.filteredProducts.length,
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: crossAxisCount, childAspectRatio: 0.75),
+                            itemBuilder: (BuildContext context, int index) {
+                              final ProductModel product = controller.filteredProducts[index];
+                              return Obx(() => _buildOrderCard(product));
+                            },
+                          );
+                        },
+                      );
+                    }),
                   ),
-                );
-              }
-
-              return LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  final double width = constraints.maxWidth;
-                  final int crossAxisCount = (width / 250).floor().clamp(2, 6);
-
-                  return GridView.builder(
-                    itemCount: controller.filteredProducts.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: crossAxisCount, childAspectRatio: 0.75),
-                    itemBuilder: (BuildContext context, int index) {
-                      final ProductModel product = controller.filteredProducts[index];
-                      return Obx(() => _buildOrderCard(product));
-                    },
-                  );
-                },
-              );
-            }),
-          ),
-          // _pagination(),
-        ],
+                  // _pagination(),
+                ],
+              ),
       ),
     );
   }
@@ -272,7 +277,7 @@ class OrdersView extends GetView<OrdersController> {
                           width: 32,
                           height: 32,
                           child: Container(
-                            decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+                            decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
                             child: IconButton(
                               icon: const Icon(Icons.remove, size: 18),
                               onPressed: orderedProductsCount > 0
@@ -297,7 +302,7 @@ class OrdersView extends GetView<OrdersController> {
                           width: 32,
                           height: 32,
                           child: Container(
-                            decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+                            decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
                             child: IconButton(
                               icon: const Icon(Icons.add, size: 18),
                               onPressed: controller.products[controller.products.indexOf(product)].quantity > 0

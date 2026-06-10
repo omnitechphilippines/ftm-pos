@@ -14,64 +14,72 @@ class ProductsView extends GetView<ProductsController> {
   @override
   Widget build(BuildContext context) {
     final String currentRoute = Get.currentRoute.isNotEmpty ? Get.currentRoute : (Get.routing.current.isNotEmpty ? Get.routing.current : ModalRoute.of(context)?.settings.name ?? '/');
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Products',
-        actions: <Widget>[
-          IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: () => _showScannerDialog(controller), tooltip: 'Scan Barcode'),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: () => controller.fetchProducts(), tooltip: 'Refresh'),
-        ],
-      ),
-      drawer: SideDrawer(currentRoute: currentRoute),
-      body: Column(
-        children: <Widget>[
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              onChanged: (String value) => controller.searchQuery.value = value,
-              decoration: InputDecoration(
-                hintText: 'Search by name or code...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                filled: true,
-              ),
-            ),
-          ),
-
-          // Product List
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value && controller.products.isEmpty) {
-                return _buildLoadingIndicator();
-              }
-
-              if (controller.filteredProducts.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text('No products found', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
-                    ],
+    return Obx(
+      () => Scaffold(
+        appBar: CustomAppBar(
+          title: 'Products',
+          actions: controller.isLoading.value
+              ? null
+              : <Widget>[IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: () => _showScannerDialog(controller), tooltip: 'Scan Barcode'), IconButton(icon: const Icon(Icons.refresh), onPressed: () => controller.fetchProducts(), tooltip: 'Refresh Products')],
+        ),
+        drawer: SideDrawer(currentRoute: currentRoute),
+        body:
+            controller
+                .isLoading
+                .value // && controller.products.isEmpty
+            ? _buildLoadingIndicator()
+            : Column(
+                children: <Widget>[
+                  // Search Bar
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: TextField(
+                      onChanged: (String value) => controller.searchQuery.value = value,
+                      decoration: InputDecoration(
+                        hintText: 'Search by name or code...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        filled: true,
+                      ),
+                    ),
                   ),
-                );
-              }
 
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: controller.filteredProducts.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final ProductModel product = controller.filteredProducts[index];
-                  return _buildProductCard(product, controller);
-                },
-              );
-            }),
-          ),
-        ],
+                  // Product List
+                  Expanded(
+                    child: Obx(() {
+                      if (controller.filteredProducts.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[400]),
+                              const SizedBox(height: 16),
+                              Text('No products found', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: controller.filteredProducts.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final ProductModel product = controller.filteredProducts[index];
+                          return _buildProductCard(product, controller);
+                        },
+                      );
+                    }),
+                  ),
+                ],
+              ),
+        floatingActionButton: controller.isLoading.value
+            ? null
+            : FloatingActionButton.extended(
+                onPressed: () => _showProductDialog(controller),
+                icon: const Icon(Icons.add),
+                label: const Text('Add Product', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
       ),
-      floatingActionButton: FloatingActionButton.extended(onPressed: () => _showProductDialog(controller), icon: const Icon(Icons.add), label: const Text('Add Product'), backgroundColor: Colors.blue),
     );
   }
 
@@ -124,7 +132,7 @@ class ProductsView extends GetView<ProductsController> {
               children: <Widget>[
                 Text(
                   'Stock: ${product.quantity}',
-                  style: TextStyle(color: isLowStock ? Colors.red : Colors.white24, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: isLowStock ? Colors.red : Colors.green, fontWeight: FontWeight.bold),
                 ),
               ],
             ),

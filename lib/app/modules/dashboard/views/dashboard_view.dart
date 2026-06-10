@@ -18,18 +18,12 @@ class DashboardView extends GetView<DashboardController> {
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Dashboard',
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () => controller.refreshDashboard(),
-            tooltip: 'Refresh Dashboard',
-          ),
-        ],
+        actions: <Widget>[IconButton(icon: const Icon(Icons.refresh), onPressed: () => controller.refreshDashboard(), tooltip: 'Refresh Dashboard')],
       ),
       drawer: SideDrawer(currentRoute: currentRoute),
       body: Obx(() {
         if (controller.isLoading.value && controller.recentOrdersList.isEmpty) {
-          return const Center(child: CircularProgressIndicator(color: Colors.white));
+          return const Center(child: CircularProgressIndicator());
         }
 
         return RefreshIndicator(
@@ -94,7 +88,6 @@ class DashboardView extends GetView<DashboardController> {
 
   Widget _buildClickableMetricCard(BuildContext context, String title, String value, IconData icon, Color color, VoidCallback onTap) {
     return Card(
-      color: const Color(0xFF2A2D3E),
       elevation: 2,
       clipBehavior: Clip.antiAlias, // Ensures the splash ripple effect stays inside the card borders
       child: InkWell(
@@ -119,10 +112,7 @@ class DashboardView extends GetView<DashboardController> {
                     const SizedBox(height: 4),
                     FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text(
-                        value,
-                        style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
+                      child: Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -136,7 +126,6 @@ class DashboardView extends GetView<DashboardController> {
 
   Widget _buildTopProductsCard(BuildContext context) {
     return Card(
-      color: const Color(0xFF2A2D3E),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => _showFullLeaderboardDialog(),
@@ -148,10 +137,7 @@ class DashboardView extends GetView<DashboardController> {
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text(
-                    'Top Moving Products',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  Text('Top Moving Products', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   Icon(Icons.open_in_new, color: Colors.grey, size: 18),
                 ],
               ),
@@ -170,13 +156,10 @@ class DashboardView extends GetView<DashboardController> {
                     final dynamic item = controller.topProductsList[index];
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(
-                        backgroundColor: const Color(0xFF1F212C),
-                        child: Text('${index + 1}', style: const TextStyle(color: Colors.white)),
-                      ),
+                      leading: CircleAvatar(backgroundColor: const Color(0xFF1F212C), child: Text('${index + 1}')),
                       title: Text(
                         item['p_name'] ?? 'Unknown Item',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -197,7 +180,6 @@ class DashboardView extends GetView<DashboardController> {
 
   Widget _buildRecentOrdersCard(BuildContext context) {
     return Card(
-      color: const Color(0xFF2A2D3E),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => _showAllRecentInvoicesDialog(),
@@ -209,10 +191,7 @@ class DashboardView extends GetView<DashboardController> {
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text(
-                    'Recent Invoices',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  Text('Recent Invoices', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   Icon(Icons.open_in_new, color: Colors.grey, size: 18),
                 ],
               ),
@@ -231,17 +210,14 @@ class DashboardView extends GetView<DashboardController> {
                     final OrderModel order = controller.recentOrdersList[index];
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text('Invoice #${order.id.substring(0, 8).toUpperCase()}', style: const TextStyle(color: Colors.white)),
+                      title: Text('Invoice #${order.id.substring(0, 8).toUpperCase()}'),
                       subtitle: Text(
                         '${order.name.length} items • ${order.orderAt.toString().substring(11, 16)}',
                         style: const TextStyle(color: Colors.grey, fontSize: 12),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      trailing: Text(
-                        '₱${order.total.toStringAsFixed(2)}',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
+                      trailing: Text('₱${order.total.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                       onTap: () => _showSingleReceiptDetailPopUp(order),
                     );
                   },
@@ -256,11 +232,7 @@ class DashboardView extends GetView<DashboardController> {
   void _showRevenueDetails() {
     Get.dialog(
       AlertDialog(
-        backgroundColor: const Color(0xFF2A2D3E),
-        title: const Text(
-          'Gross Financial Revenue',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Gross Financial Revenue', style: TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,12 +258,8 @@ class DashboardView extends GetView<DashboardController> {
   void _showInvoicesSummaryDialog() {
     Get.dialog(
       AlertDialog(
-        backgroundColor: const Color(0xFF2A2D3E),
-        title: const Text(
-          'Invoice Transactions Record',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        content: Text('A total of ${controller.totalOrders.value} individual checkout sales records have been written to the system database history log.', style: const TextStyle(color: Colors.white)),
+        title: const Text('Invoice Transactions Record', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text('A total of ${controller.totalOrders.value} individual checkout sales records have been written to the system database history log.'),
         actions: <Widget>[
           TextButton(
             onPressed: () => Get.back(),
@@ -305,18 +273,14 @@ class DashboardView extends GetView<DashboardController> {
   void _showLowStockDetailsDialog() {
     Get.dialog(
       AlertDialog(
-        backgroundColor: const Color(0xFF2A2D3E),
         title: const Row(
           children: <Widget>[
             Icon(Icons.warning, color: Colors.orange),
             SizedBox(width: 8),
-            Text(
-              'Low Stock Alerts',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+            Text('Low Stock Alerts', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
-        content: Text('There are currently ${controller.lowStockCount.value} products in your catalog master directory that have 5 or fewer items remaining in inventory.', style: const TextStyle(color: Colors.white)),
+        content: Text('There are currently ${controller.lowStockCount.value} products in your catalog master directory that have 5 or fewer items remaining in inventory.'),
         actions: <Widget>[
           TextButton(
             onPressed: () => Get.back(),
@@ -330,11 +294,7 @@ class DashboardView extends GetView<DashboardController> {
   void _showFullLeaderboardDialog() {
     Get.dialog(
       AlertDialog(
-        backgroundColor: const Color(0xFF2A2D3E),
-        title: const Text(
-          'Complete Moving Leaderboard',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Complete Moving Leaderboard', style: TextStyle(fontWeight: FontWeight.bold)),
         content: SizedBox(
           width: 450,
           child: ListView.builder(
@@ -344,7 +304,7 @@ class DashboardView extends GetView<DashboardController> {
               final dynamic item = controller.topProductsList[index];
               return ListTile(
                 leading: Text('${index + 1}.', style: const TextStyle(color: Colors.grey)),
-                title: Text(item['p_name'] ?? 'Unknown', style: const TextStyle(color: Colors.white)),
+                title: Text(item['p_name'] ?? 'Unknown'),
                 subtitle: Text('${item['total_qty_sold']} units sold', style: const TextStyle(color: Colors.grey, fontSize: 11)),
                 trailing: Text(
                   '₱${(item['total_revenue_generated'] as num).toStringAsFixed(2)}',
@@ -367,11 +327,7 @@ class DashboardView extends GetView<DashboardController> {
   void _showAllRecentInvoicesDialog() {
     Get.dialog(
       AlertDialog(
-        backgroundColor: const Color(0xFF2A2D3E),
-        title: const Text(
-          'Full Recent Invoices Index',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Full Recent Invoices Index', style: TextStyle(fontWeight: FontWeight.bold)),
         content: SizedBox(
           width: 500,
           child: ListView.builder(
@@ -380,7 +336,7 @@ class DashboardView extends GetView<DashboardController> {
             itemBuilder: (BuildContext context, int index) {
               final OrderModel order = controller.recentOrdersList[index];
               return ListTile(
-                title: Text('ID: #${order.id.substring(0, 8).toUpperCase()}', style: const TextStyle(color: Colors.white)),
+                title: Text('ID: #${order.id.substring(0, 8).toUpperCase()}'),
                 subtitle: Text('Date: ${order.orderAt.toString().substring(0, 16)}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
                 trailing: Text(
                   '₱${order.total.toStringAsFixed(2)}',
@@ -407,15 +363,11 @@ class DashboardView extends GetView<DashboardController> {
   void _showSingleReceiptDetailPopUp(OrderModel order) {
     Get.dialog(
       AlertDialog(
-        backgroundColor: const Color(0xFF2A2D3E),
         title: Row(
           children: <Widget>[
-            const Icon(Icons.receipt_long, color: Colors.white, size: 22),
+            const Icon(Icons.receipt_long, size: 22),
             const SizedBox(width: 8),
-            Text(
-              'Invoice #${order.id.substring(0, 8).toUpperCase()} Details',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
+            Text('Invoice #${order.id.substring(0, 8).toUpperCase()} Details', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
         content: SizedBox(
@@ -469,15 +421,10 @@ class DashboardView extends GetView<DashboardController> {
                             DataCell(
                               ConstrainedBox(
                                 constraints: const BoxConstraints(maxWidth: 180),
-                                child: Text(
-                                  order.name[idx],
-                                  style: const TextStyle(color: Colors.white, fontSize: 13),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                child: Text(order.name[idx], style: const TextStyle(fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),
                               ),
                             ),
-                            DataCell(Text('x${order.quantity[idx]}', style: const TextStyle(color: Colors.white, fontSize: 13))),
+                            DataCell(Text('x${order.quantity[idx]}', style: const TextStyle(fontSize: 13))),
                             DataCell(
                               Text(
                                 '₱${order.amount[idx].toStringAsFixed(2)}',
@@ -496,10 +443,7 @@ class DashboardView extends GetView<DashboardController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    const Text(
-                      'Total Paid Amount:',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
+                    const Text('Total Paid Amount:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                     Text(
                       '₱${order.total.toStringAsFixed(2)}',
                       style: const TextStyle(color: Colors.green, fontSize: 20, fontWeight: FontWeight.bold),
@@ -526,15 +470,11 @@ class DashboardView extends GetView<DashboardController> {
   void _showExpiryDetailsDialog() {
     Get.dialog(
       AlertDialog(
-        backgroundColor: const Color(0xFF2A2D3E),
         title: const Row(
           children: <Widget>[
             Icon(Icons.hourglass_bottom, color: Colors.orange),
             SizedBox(width: 8),
-            Text(
-              'Product Expiry Log',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
+            Text('Product Expiry Log', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
         content: SizedBox(
@@ -552,13 +492,13 @@ class DashboardView extends GetView<DashboardController> {
                     final bool isExpired = item['is_expired'] ?? false;
 
                     return Card(
-                      color: const Color(0xFF1F212C),
+                      // color: const Color(0xFF1F212C),
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       child: ListTile(
                         leading: Icon(isExpired ? Icons.cancel : Icons.error_outline, color: isExpired ? Colors.red : Colors.yellow),
                         title: Text(
                           item['name'] ?? 'Unknown Product',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -572,7 +512,7 @@ class DashboardView extends GetView<DashboardController> {
                               style: TextStyle(color: isExpired ? Colors.red : Colors.yellow, fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 2),
-                            Text(item['expiry_label'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                            Text(item['expiry_label'] ?? '', style: const TextStyle(fontSize: 12)),
                           ],
                         ),
                       ),

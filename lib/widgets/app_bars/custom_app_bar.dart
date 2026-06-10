@@ -16,6 +16,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     final List<Widget> defaultActions = <Widget>[IconButton(icon: const Icon(Icons.logout), onPressed: _logout, tooltip: 'Logout')];
     final List<Widget> allActions = actions != null ? <Widget>[...actions!, ...defaultActions] : defaultActions;
     return AppBar(
+      elevation: 3,
       title: Row(
         children: <Widget>[
           if (image != null) ...<Widget>[SizedBox(width: 32, child: Image.asset(image!)), const SizedBox(width: 8)],
@@ -38,6 +39,21 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   void _logout() async {
-    await Get.find<AuthService>().logout();
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: <Widget>[
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              await Get.find<AuthService>().logout();
+              Get.back();
+            },
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
   }
 }

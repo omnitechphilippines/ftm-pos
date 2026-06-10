@@ -32,11 +32,11 @@ class ReportsView extends GetView<ReportsController> {
         },
         child: Scaffold(
           appBar: CustomAppBar(
-            title: 'Sales Analytics & Reports',
+            title: 'Sales & Reports',
             // Show a back button on mobile when deep inside drill-downs
             leading: isMobile && controller.selectedPeriod.value.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    icon: const Icon(Icons.arrow_back),
                     onPressed: () {
                       if (controller.selectedDetailedOrder.value != null) {
                         controller.selectedDetailedOrder.value = null; // Go back to invoices list
@@ -50,14 +50,13 @@ class ReportsView extends GetView<ReportsController> {
           drawer: isMobile && controller.selectedPeriod.value.isNotEmpty ? null : SideDrawer(currentRoute: currentRoute),
           body: () {
             if (controller.isLoading.value && controller.reportSummaryLines.isEmpty) {
-              return const Center(child: CircularProgressIndicator(color: Colors.white));
+              return const Center(child: CircularProgressIndicator());
             }
 
             // --- SCENARIO 1: MOBILE VIEW (Single Column Navigation Stack) ---
             if (isMobile) {
               if (controller.selectedPeriod.value.isEmpty) {
                 return Container(
-                  color: const Color(0xFF2A2D3E),
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +73,7 @@ class ReportsView extends GetView<ReportsController> {
                 return Container(padding: const EdgeInsets.all(16), child: _buildPeriodOrdersView());
               }
 
-              return Container(color: const Color(0xFF2A2D3E), padding: const EdgeInsets.all(16), child: _buildReceiptDetailsView(isMobile: true));
+              return Container(padding: const EdgeInsets.all(16), child: _buildReceiptDetailsView(isMobile: true));
             }
 
             // --- SCENARIO 2: DESKTOP VIEW (3-Column Layout Preserved) ---
@@ -84,7 +83,6 @@ class ReportsView extends GetView<ReportsController> {
                 Expanded(
                   flex: 3,
                   child: Container(
-                    color: const Color(0xFF2A2D3E),
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +102,7 @@ class ReportsView extends GetView<ReportsController> {
                 const VerticalDivider(color: Colors.grey, width: 1),
                 Expanded(
                   flex: 4,
-                  child: Container(color: const Color(0xFF2A2D3E), padding: const EdgeInsets.all(16), child: _buildReceiptDetailsView(isMobile: false)),
+                  child: Container(padding: const EdgeInsets.all(16), child: _buildReceiptDetailsView(isMobile: false)),
                 ),
               ],
             );
@@ -125,10 +123,7 @@ class ReportsView extends GetView<ReportsController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const Text(
-          'Invoice Specifications',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+        const Text('Invoice Specifications', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const Divider(color: Colors.grey),
         Text('ID: ${order.id}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
         Text('Timestamp: ${order.orderAt}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
@@ -142,23 +137,15 @@ class ReportsView extends GetView<ReportsController> {
                 horizontalMargin: 0,
                 columnSpacing: isMobile ? 20 : 40, // Shrink columns spacing on mobile screen
                 columns: const <DataColumn>[
-                  DataColumn(
-                    label: Text('Item Name', style: TextStyle(color: Colors.white)),
-                  ),
-                  DataColumn(
-                    label: Text('Qty', style: TextStyle(color: Colors.white)),
-                    numeric: true,
-                  ),
-                  DataColumn(
-                    label: Text('Total', style: TextStyle(color: Colors.white)),
-                    numeric: true,
-                  ),
+                  DataColumn(label: Text('Item Name')),
+                  DataColumn(label: Text('Qty'), numeric: true),
+                  DataColumn(label: Text('Total'), numeric: true),
                 ],
                 rows: List<DataRow>.generate(order.name.length, (int idx) {
                   return DataRow(
                     cells: <DataCell>[
-                      DataCell(Text(order.name[idx], style: const TextStyle(color: Colors.white))),
-                      DataCell(Text('x${order.quantity[idx]}', style: const TextStyle(color: Colors.white))),
+                      DataCell(Text(order.name[idx])),
+                      DataCell(Text('x${order.quantity[idx]}')),
                       DataCell(Text('₱${order.amount[idx].toStringAsFixed(2)}', style: const TextStyle(color: Colors.green))),
                     ],
                   );
@@ -171,10 +158,7 @@ class ReportsView extends GetView<ReportsController> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            const Text(
-              'Total Net Gross:',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            const Text('Total Net Gross:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             Text(
               '₱${order.total.toStringAsFixed(2)}',
               style: const TextStyle(color: Colors.green, fontSize: 22, fontWeight: FontWeight.bold),
@@ -212,16 +196,14 @@ class ReportsView extends GetView<ReportsController> {
         final String periodLabel = line['report_date'] ?? '';
         final double sales = (line['total_sales'] ?? 0.0).toDouble();
         final int count = line['order_count'] ?? 0;
-        final bool isCurrentSelection = controller.selectedPeriod.value == periodLabel;
+        final bool isSelected = controller.selectedPeriod.value == periodLabel;
 
         return Card(
-          color: isCurrentSelection ? const Color(0xFF4D4F5B) : const Color(0xFF1F212C),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
           margin: const EdgeInsets.symmetric(vertical: 4),
           child: ListTile(
-            title: Text(
-              periodLabel,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+            selected: isSelected,
+            title: Text(periodLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('$count Orders Placed', style: const TextStyle(color: Colors.grey)),
             trailing: Text(
               '₱${sales.toStringAsFixed(2)}',
@@ -243,10 +225,7 @@ class ReportsView extends GetView<ReportsController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          'Invoices for: ${controller.selectedPeriod.value}',
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+        Text('Invoices for: ${controller.selectedPeriod.value}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const Divider(color: Colors.grey),
         Expanded(
           child: ListView.builder(
@@ -257,13 +236,9 @@ class ReportsView extends GetView<ReportsController> {
 
               return ListTile(
                 selected: isSelected,
-                selectedTileColor: const Color(0xFF4D4F5B),
-                title: Text('Invoice ID: ${order.id.substring(0, 8)}...', style: const TextStyle(color: Colors.white)),
+                title: Text('Invoice ID: ${order.id.substring(0, 13)}...'),
                 subtitle: Text('Time: ${order.orderAt.toString().substring(11, 16)}', style: const TextStyle(color: Colors.grey)),
-                trailing: Text(
-                  '₱${order.total.toStringAsFixed(2)}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
+                trailing: Text('₱${order.total.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                 onTap: () => controller.selectSpecificOrder(order),
               );
             },
