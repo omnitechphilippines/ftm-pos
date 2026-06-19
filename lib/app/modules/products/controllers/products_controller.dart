@@ -18,6 +18,7 @@ class ProductsController extends GetxController {
   final RxList<ProductModel> filteredProducts = <ProductModel>[].obs;
   final RxBool isLoading = false.obs;
   final RxString searchQuery = ''.obs;
+  final TextEditingController searchQueryController = TextEditingController();
   final RxString errorMessage = ''.obs;
 
   // Form controllers

@@ -10,8 +10,8 @@ class AuthService extends GetxService {
   final Rx<AuthModel> state = const AuthModel().obs;
 
   @override
-  void onInit() {
-    super.onInit();
+  void onReady() {
+    super.onReady();
     _checkLoginStatus();
   }
 

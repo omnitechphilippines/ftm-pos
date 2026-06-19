@@ -4,7 +4,7 @@ class AuthApiService {
   final SupabaseClient _supabase = Supabase.instance.client;
   Future<Map<String, dynamic>> login(String userName, String password) async {
     final PostgrestList response = await _supabase.from('users_master').select().eq('user_name', userName).eq('password', password);
-    return response != <dynamic>[] ? response[0] : <String, dynamic>{};
+    return response != <Map<String, dynamic>>[] ? response[0] : <String, dynamic>{};
   }
   // static const String baseUrl = 'https://nodered-omnitech.onrender.com/api/v1/login';
 

@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../../models/auth_model.dart';
 import '../../../../services/auth_service.dart';
+import '../../../../widgets/loading_indicators/loading_indicator.dart';
 import '../../../routes/app_pages.dart';
 
 class LoginController extends GetxController {
@@ -23,13 +24,9 @@ class LoginController extends GetxController {
     super.onInit();
     _fetchPackageInfo();
 
-    passwordController.addListener(() {
-      isPasswordEmpty.value = passwordController.text.isEmpty;
-    });
-
     ever<AuthModel>(_authService.state, (AuthModel next) {
       if (next.status == AuthStatus.loading) {
-        Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+        Get.dialog(const LoadingIndicator(), barrierDismissible: false);
       } else {
         if (Get.isDialogOpen ?? false) {
           Get.back();
@@ -62,17 +59,11 @@ class LoginController extends GetxController {
     emailFocus.requestFocus();
   }
 
-  Future<void> _fetchPackageInfo() async {
-    packageInfo.value = await PackageInfo.fromPlatform();
-  }
+  Future<void> _fetchPackageInfo() async => packageInfo.value = await PackageInfo.fromPlatform();
 
-  void toggleShowPassword() {
-    showPassword.toggle();
-  }
+  void get toggleShowPassword => showPassword.toggle();
 
-  void handleSubmit() {
-    _authService.login(emailController.text.trim(), passwordController.text.trim());
-  }
+  void get handleSubmit => _authService.login(emailController.text.trim(), passwordController.text.trim());
 
   @override
   void onClose() {

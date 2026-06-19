@@ -16,13 +16,12 @@ class OrdersController extends GetxController {
   final RxList<ProductModel> products = <ProductModel>[].obs;
   final RxString errorMessage = ''.obs;
   final RxString searchQuery = ''.obs;
+  final TextEditingController searchQueryController = TextEditingController();
   final RxList<ProductModel> filteredProducts = <ProductModel>[].obs;
   final RxList<ProductModel> orderedProducts = <ProductModel>[].obs;
   OrderModel? cartItems;
 
-  final RxInt currentPage = 1.obs;
   final RxBool isLoading = false.obs;
-  // final int totalPages = 5;
 
   final RxInt cart = 0.obs;
 
@@ -31,20 +30,19 @@ class OrdersController extends GetxController {
     super.onInit();
     fetchProducts();
 
-    // Listen to search query changes
-    debounce(searchQuery, (_) => filterProducts());
+    debounce(searchQuery, (_) => filterProducts(), time: const Duration(milliseconds: 300));
   }
 
-  // Initialize scanner
+  /// Initialize barcode scanner
   void initializeScanner() => scannerController = MobileScannerController(detectionSpeed: DetectionSpeed.normal, facing: CameraFacing.back);
 
-  // Dispose scanner
+  /// Dispose barcode scanner
   void disposeScanner() {
     scannerController?.dispose();
     scannerController = null;
   }
 
-  // Fetch all products from Supabase
+  /// Fetch all products from Supabase
   Future<void> fetchProducts() async {
     try {
       isLoading.value = true;
@@ -61,66 +59,19 @@ class OrdersController extends GetxController {
     }
   }
 
-  // Search product by barcode
-  Future<ProductModel?> searchProductByCode(String code) async {
-    try {
-      final PostgrestMap? response = await _supabase.from('products_master').select().eq('code', code).maybeSingle();
+  /// Search product by barcode
+  ProductModel? searchProductByCode(String code) => products.firstWhere((ProductModel product) => product.code == code);
 
-      if (response != null) {
-        return ProductModel.fromJson(response);
-      }
-      return null;
-    } catch (e) {
-      errorMessage.value = 'Failed to search product: $e';
-      return null;
-    }
-  }
-
-  // Load product data into form for editing
-  void loadProductToForm(ProductModel product) {
-    // codeController.text = product.code;
-    // nameController.text = product.name;
-    // sellingPriceController.text = product.sellingPrice.toString();
-    // originalPriceController.text = product.originalPrice.toString();
-    // quantityController.text = product.quantity.toString();
-    // weightController.text = product.weight.toString();
-    // expiryDate.value = product.expiryDate;
-    // selectedImage.value = product.image;
-  }
-
-  // Filter products based on search query
+  /// Filter products based on search query
   void filterProducts() {
     if (searchQuery.value.isEmpty) {
-      filteredProducts.value = products;
+      filteredProducts.value = .from(products);
     } else {
       filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.toLowerCase().contains(searchQuery.value.toLowerCase())).toList();
     }
   }
 
-  // Future<void> navigateToPage(int page) async {
-  //   isLoading.value = true;
-  //   await Future<dynamic>.delayed(const Duration(milliseconds: 0));
-  //   currentPage
-  //     ..value = page.clamp(1, totalPages)
-  //     ..refresh();
-  //   isLoading.value = false;
-  // }
-
-  // Future<void> testOrdersTableConnection() async {
-  //   try {
-  //     isLoading.value = true;
-  //     final PostgrestList response = await supabase.from('orders').select();
-  //     Get.snackbar('Success', 'Successfully connected to orders table. Rows: ${response.length}', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white);
-  //     print('Orders table response: $response');
-  //   } catch (e) {
-  //     Get.snackbar('Error', 'Failed to connect to orders table: $e', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, duration: const Duration(seconds: 5));
-  //     print('Error connecting to orders table: $e');
-  //   } finally {
-  //     isLoading.value = false;
-  //   }
-  // }
-
-  void showConfirmationDialog() {
+  void showOrderConfirmationDialog() {
     Get.dialog(
       AlertDialog(
         title: const Row(
@@ -140,8 +91,8 @@ class OrdersController extends GetxController {
           ),
           ElevatedButton(
             onPressed: () {
-              Get.back(); // Closes the dialog first
-              confirmOrder(); // Executes the actual database transaction
+              Get.back();
+              _confirmOrder();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             child: const Text('Confirm', style: TextStyle(color: Colors.white)),
@@ -152,7 +103,7 @@ class OrdersController extends GetxController {
     );
   }
 
-  void confirmOrder() async {
+  void _confirmOrder() async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
@@ -170,5 +121,37 @@ class OrdersController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  void incrementCart(ProductModel product, int orderedProductsCount) {
+    cart.value++;
+    orderedProductsCount++;
+    product.quantity--;
+    if (orderedProductsCount == 1) {
+      orderedProducts.add(product.copyWith(quantity: 1));
+    } else {
+      orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.code == product.code)] = product.copyWith(quantity: orderedProductsCount);
+    }
+  }
+
+  void decrementCart(ProductModel product, int orderedProductsCount) {
+    cart.value--;
+    orderedProductsCount--;
+    product.quantity++;
+    if (orderedProductsCount == 0) {
+      orderedProducts.removeAt(orderedProducts.indexWhere((ProductModel p) => p.code == product.code));
+    } else {
+      orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.code == product.code)] = product.copyWith(quantity: orderedProductsCount);
+    }
+  }
+
+  int orderedProductsCount(ProductModel product) => orderedProducts.firstWhereOrNull((ProductModel p) => p.code == product.code)?.quantity ?? 0;
+
+  // void updateProductQuantity(ProductModel product, int quantity) => orderedProducts.add(product.copyWith(quantity: quantity));
+
+  @override
+  void onClose() {
+    searchQueryController.dispose();
+    super.onClose();
   }
 }

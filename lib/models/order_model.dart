@@ -14,33 +14,20 @@ class OrderModel {
   OrderModel({required this.id, required this.code, required this.name, required this.originalPrice, required this.sellingPrice, required this.amount, required this.quantity, required this.total, required this.orderAt, required this.createdAt, required this.updatedAt});
 
   factory OrderModel.fromJson(Map<String, dynamic> json) => OrderModel(
-    id: json['id'],
-    // code: json['code'],
-    // name: json['name'],
-    // originalPrice: json['original_price'],
-    // sellingPrice: json['selling_price'],
-    // amount: json['amount'],
-    // quantity: json['quantity'],
-
-    // FIX: Safely convert List<dynamic> to List<String>
-    code: List<String>.from(json['code'] ?? <dynamic>[]),
-    name: List<String>.from(json['name'] ?? <dynamic>[]),
-
-    // FIX: Safely convert numeric array data to List<double>
-    originalPrice: (json['original_price'] as List<dynamic>? ?? <dynamic>[]).map((dynamic e) => (e as num).toDouble()).toList(),
-    sellingPrice: (json['selling_price'] as List<dynamic>? ?? <dynamic>[]).map((dynamic e) => (e as num).toDouble()).toList(),
-    amount: (json['amount'] as List<dynamic>? ?? <dynamic>[]).map((dynamic e) => (e as num).toDouble()).toList(),
-
-    // FIX: Safely convert numbers to List<int>
-    quantity: List<int>.from(json['quantity'] ?? <dynamic>[]),
-
-    total: json['total'],
+    id: json['id'] ?? '',
+    code: List<String>.from(json['code'] ?? <String>[]),
+    name: List<String>.from(json['name'] ?? <String>[]),
+    originalPrice: List<double>.from(json['original_price'] ?? <double>[]),
+    sellingPrice: List<double>.from(json['selling_price'] ?? <double>[]),
+    amount: List<double>.from(json['amount'] ?? <double>[]),
+    quantity: List<int>.from(json['quantity'] ?? <int>[]),
+    total: json['total'] ?? 0.0,
     orderAt: DateTime.parse(json['order_at']).toLocal(),
     createdAt: DateTime.parse(json['created_at']).toLocal(),
     updatedAt: DateTime.parse(json['updated_at']).toLocal(),
   );
 
-  Map<String, Object?> toJson() => <String, Object?>{
+  Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
     'code': code,
     'name': name,

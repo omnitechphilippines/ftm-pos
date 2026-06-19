@@ -23,8 +23,8 @@ class DashboardController extends GetxController {
 
   @override
   void onInit() {
-    refreshDashboard();
     super.onInit();
+    refreshDashboard();
   }
 
   Future<void> refreshDashboard() async {
@@ -34,45 +34,29 @@ class DashboardController extends GetxController {
       // 1. Fetch Aggregated Metrics
       final dynamic analyticsPayload = await _supabase.rpc('get_homepage_dashboard_stats');
       if (analyticsPayload != null) {
-        totalRevenue.value = (analyticsPayload['total_revenue'] ?? 0.0).toDouble();
+        totalRevenue.value = analyticsPayload['total_revenue'] ?? 0.0;
         totalOrders.value = analyticsPayload['total_orders'] ?? 0;
         lowStockCount.value = analyticsPayload['low_stock_count'] ?? 0;
         topProductsList.value = analyticsPayload['top_products'] ?? <dynamic>[];
       }
 
       // 2. Fetch Recent Transactions
-      final List<dynamic> recentOrdersResponse = await _supabase.from('orders').select().order('order_at', ascending: false).limit(10);
-
-      recentOrdersList.value = recentOrdersResponse.map((dynamic item) => OrderModel.fromJson(item as Map<String, dynamic>)).toList();
+      final PostgrestList recentOrdersResponse = await _supabase.from('orders').select().order('order_at', ascending: false).limit(10);
+      recentOrdersList.value = recentOrdersResponse.map((Map<String, dynamic> item) => OrderModel.fromJson(item)).toList();
 
       // Update the portion inside your refreshDashboard() function to read the new JSON keys:
       if (analyticsPayload != null) {
-        totalRevenue.value = (analyticsPayload['total_revenue'] ?? 0.0).toDouble();
+        totalRevenue.value = analyticsPayload['total_revenue'] ?? 0.0;
         totalOrders.value = analyticsPayload['total_orders'] ?? 0;
         lowStockCount.value = analyticsPayload['low_stock_count'] ?? 0;
-
-        // Parse new fields
         expiryAlertCount.value = analyticsPayload['expiry_alert_count'] ?? 0;
-        expiryItemsList.value = analyticsPayload['expiry_items'] ?? [];
-
-        topProductsList.value = analyticsPayload['top_products'] ?? [];
+        expiryItemsList.value = analyticsPayload['expiry_items'] ?? <dynamic>[];
+        topProductsList.value = analyticsPayload['top_products'] ?? <dynamic>[];
       }
     } catch (e) {
       Get.snackbar('Error', 'Dashboard failed to sync: $e', backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
-    }
-  }
-
-  // Fetch the complete product leaderboard list for the pop-up detail view
-  Future<List<dynamic>> fetchFullProductLeaderboard() async {
-    try {
-      // Reuses your database view logic to extract all aggregated units sold
-      final dynamic analyticsPayload = await _supabase.rpc('get_homepage_dashboard_stats');
-      return analyticsPayload != null ? analyticsPayload['top_products'] ?? <dynamic>[] : <dynamic>[];
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to pull complete product leaderboard: $e', backgroundColor: Colors.red, colorText: Colors.white);
-      return <dynamic>[];
     }
   }
 }

@@ -17,17 +17,17 @@ class ProductModel {
   ProductModel({required this.id, required this.code, required this.name, required this.originalPrice, required this.sellingPrice, required this.quantity, this.weight, this.expiryDate, required this.image, required this.createdAt, required this.updatedAt});
 
   factory ProductModel.fromJson(Map<String, dynamic> json) => ProductModel(
-    id: json['id'],
-    code: json['code'],
-    name: json['name'],
-    originalPrice: json['original_price'],
-    sellingPrice: json['selling_price'],
-    quantity: json['quantity'],
-    weight: json['weight'],
+    id: json['id'] ?? '',
+    code: json['code'] ?? '',
+    name: json['name'] ?? '',
+    originalPrice: json['original_price'] ?? 0.0,
+    sellingPrice: json['selling_price'] ?? 0.0,
+    quantity: json['quantity'] ?? 0,
+    weight: json['weight'] ?? '',
     expiryDate: DateTime.tryParse(json['expiry_date'] ?? '')?.toLocal(),
     image: Uint8List.fromList(jsonDecode(utf8.decode(_hexToUint8List(json['image'].substring(2)))).cast<int>()),
-    createdAt: DateTime.parse(json['created_at']).toLocal(),
-    updatedAt: DateTime.parse(json['updated_at']).toLocal(),
+    createdAt: DateTime.parse(json['created_at'] ?? '').toLocal(),
+    updatedAt: DateTime.parse(json['updated_at'] ?? '').toLocal(),
   );
 
   static Uint8List _hexToUint8List(String hex) {
@@ -42,7 +42,7 @@ class ProductModel {
     return bytes;
   }
 
-  Map<String, Object?> toJson() => <String, Object?>{
+  Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
     'code': code,
     'name': name,

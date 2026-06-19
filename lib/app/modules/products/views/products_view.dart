@@ -7,6 +7,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../models/product_model.dart';
 import '../../../../widgets/app_bars/custom_app_bar.dart';
 import '../../../../widgets/drawers/side_drawer.dart';
+import '../../../../widgets/loading_indicators/loading_indicator.dart';
+import '../../../../widgets/search_bars/custom_search_bar.dart';
 import '../controllers/products_controller.dart';
 
 class ProductsView extends GetView<ProductsController> {
@@ -23,26 +25,24 @@ class ProductsView extends GetView<ProductsController> {
               : <Widget>[IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: () => _showScannerDialog(controller), tooltip: 'Scan Barcode'), IconButton(icon: const Icon(Icons.refresh), onPressed: () => controller.fetchProducts(), tooltip: 'Refresh Products')],
         ),
         drawer: SideDrawer(currentRoute: currentRoute),
-        body:
-            controller
-                .isLoading
-                .value // && controller.products.isEmpty
-            ? _buildLoadingIndicator()
+        body: controller.isLoading.value
+            ? const LoadingIndicator(label: 'Loading products...')
             : Column(
                 children: <Widget>[
                   // Search Bar
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: TextField(
-                      onChanged: (String value) => controller.searchQuery.value = value,
-                      decoration: InputDecoration(
-                        hintText: 'Search by name or code...',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        filled: true,
-                      ),
-                    ),
-                  ),
+                  CustomSearchBar(controller: controller),
+                  // Padding(
+                  //   padding: const EdgeInsets.all(16.0),
+                  //   child: TextField(
+                  //     onChanged: (String value) => controller.searchQuery.value = value,
+                  //     decoration: InputDecoration(
+                  //       hintText: 'Search by name or code...',
+                  //       prefixIcon: const Icon(Icons.search),
+                  //       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  //       filled: true,
+                  //     ),
+                  //   ),
+                  // ),
 
                   // Product List
                   Expanded(
@@ -75,23 +75,10 @@ class ProductsView extends GetView<ProductsController> {
         floatingActionButton: controller.isLoading.value
             ? null
             : FloatingActionButton.extended(
-                onPressed: () => _showProductDialog(controller),
+                onPressed: () => _showProductDialog(),
                 icon: const Icon(Icons.add),
                 label: const Text('Add Product', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingIndicator() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Loading products...', style: TextStyle(fontWeight: FontWeight.bold)),
-        ],
       ),
     );
   }
@@ -118,7 +105,7 @@ class ProductsView extends GetView<ProductsController> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.memory(product.image, width: 56, height: 56, fit: BoxFit.contain),
+            child: Image.memory(product.image, width: 50, height: 50, fit: BoxFit.contain),
           ),
         ),
         title: Text(product.weight!.isNotEmpty ? '${product.name} - ${product.weight}' : product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -169,7 +156,7 @@ class ProductsView extends GetView<ProductsController> {
           onSelected: (String value) {
             if (value == 'edit') {
               controller.loadProductToForm(product);
-              _showProductDialog(controller, product: product);
+              _showProductDialog(product: product);
             } else if (value == 'delete') {
               _showDeleteConfirmation(controller, product);
             }
@@ -179,7 +166,7 @@ class ProductsView extends GetView<ProductsController> {
     );
   }
 
-  void _showProductDialog(ProductsController controller, {ProductModel? product}) {
+  void _showProductDialog({ProductModel? product}) {
     final bool isEditing = product != null;
 
     Get.dialog(
@@ -488,11 +475,11 @@ class ProductsView extends GetView<ProductsController> {
                           final ProductModel? product = await controller.searchProductByCode(code);
                           if (product != null) {
                             controller.loadProductToForm(product);
-                            _showProductDialog(controller, product: product);
+                            _showProductDialog(product: product);
                           } else {
                             // Create new product with scanned code
                             controller.codeController.text = code;
-                            _showProductDialog(controller);
+                            _showProductDialog();
                           }
                         }
                       }

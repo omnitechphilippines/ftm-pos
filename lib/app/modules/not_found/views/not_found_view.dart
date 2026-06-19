@@ -9,7 +9,7 @@ class NotFoundView extends GetView<NotFoundController> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(child: Text('NotFoundView is working', style: TextStyle(fontSize: 20))),
+      body: Center(child: Text('Page not found', style: TextStyle(fontSize: 20))),
     );
   }
 }

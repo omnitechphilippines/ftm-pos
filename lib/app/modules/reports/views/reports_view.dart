@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../models/order_model.dart';
 import '../../../../widgets/app_bars/custom_app_bar.dart';
 import '../../../../widgets/drawers/side_drawer.dart';
+import '../../../../widgets/loading_indicators/loading_indicator.dart';
 import '../controllers/reports_controller.dart';
 
 class ReportsView extends GetView<ReportsController> {
@@ -50,7 +51,7 @@ class ReportsView extends GetView<ReportsController> {
           drawer: isMobile && controller.selectedPeriod.value.isNotEmpty ? null : SideDrawer(currentRoute: currentRoute),
           body: () {
             if (controller.isLoading.value && controller.reportSummaryLines.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
+              return const LoadingIndicator(label: 'Loading reports...');
             }
 
             // --- SCENARIO 1: MOBILE VIEW (Single Column Navigation Stack) ---
