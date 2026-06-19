@@ -3,7 +3,7 @@ import 'dart:convert';
 
 class ProductModel {
   final String id;
-  final String code;
+  final int code;
   final String name;
   final double originalPrice;
   final double sellingPrice;
@@ -18,7 +18,7 @@ class ProductModel {
 
   factory ProductModel.fromJson(Map<String, dynamic> json) => ProductModel(
     id: json['id'] ?? '',
-    code: json['code'] ?? '',
+    code: json['code'] ?? 0,
     name: json['name'] ?? '',
     originalPrice: json['original_price'] ?? 0.0,
     sellingPrice: json['selling_price'] ?? 0.0,
@@ -56,7 +56,7 @@ class ProductModel {
     'updated_at': updatedAt.toUtc().toIso8601String(),
   };
 
-  ProductModel copyWith({String? id, String? code, String? name, double? sellingPrice, double? originalPrice, int? quantity, String? weight, DateTime? expiryDate, Uint8List? image, DateTime? createdAt, DateTime? updatedAt}) => ProductModel(
+  ProductModel copyWith({String? id, int? code, String? name, double? sellingPrice, double? originalPrice, int? quantity, String? weight, DateTime? expiryDate, Uint8List? image, DateTime? createdAt, DateTime? updatedAt}) => ProductModel(
     id: id ?? this.id,
     code: code ?? this.code,
     name: name ?? this.name,

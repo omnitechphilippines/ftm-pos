@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../models/order_model.dart';
 import '../../../../models/product_model.dart';
+import '../../../../services/responsive_service.dart';
 import '../../../../themes/app_theme.dart';
 import '../../../../widgets/app_bars/custom_app_bar.dart';
 import '../../../../widgets/drawers/side_drawer.dart';
@@ -20,6 +21,7 @@ class OrdersView extends GetView<OrdersController> {
   @override
   Widget build(BuildContext context) {
     final String currentRoute = Get.currentRoute.isNotEmpty ? Get.currentRoute : (Get.routing.current.isNotEmpty ? Get.routing.current : ModalRoute.of(context)?.settings.name ?? '/');
+
     return Obx(
       () => Scaffold(
         appBar: CustomAppBar(
@@ -59,7 +61,10 @@ class OrdersView extends GetView<OrdersController> {
             : Column(
                 children: <Widget>[
                   // Search Bar
-                  CustomSearchBar(controller: controller),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: CustomSearchBar(controller: controller),
+                  ),
 
                   // Product Cards List
                   Expanded(
@@ -143,11 +148,11 @@ class OrdersView extends GetView<OrdersController> {
                           onScanned(code);
                         } else {
                           // Search for existing product
-                          final ProductModel? product = controller.searchProductByCode(code);
+                          final ProductModel? product = controller.searchProductByCode(int.parse(code));
                           if (product != null) {
-                            controller.incrementCart(product, controller.orderedProductsCount(product));
-                            controller.searchQuery.value = product.code;
-                            controller.searchQueryController.text = product.code;
+                            controller.incrementCart(product, controller.orderedProduct(product)?.quantity ?? 0);
+                            controller.searchQuery.value = product.code.toString();
+                            controller.searchQueryController.text = product.code.toString();
                           } else {
                             Get.snackbar(
                               '',
@@ -175,116 +180,144 @@ class OrdersView extends GetView<OrdersController> {
   }
 
   Widget _buildOrderCard(ProductModel product) {
+    final ResponsiveService responsive = Get.find<ResponsiveService>();
+    final bool isMobile = responsive.isMobile(Get.context!);
+
     final bool isExpiringSoon = product.expiryDate != null && product.expiryDate!.difference(DateTime.now()).inDays <= 30 && product.expiryDate!.isAfter(DateTime.now());
     final bool isExpired = product.expiryDate != null && product.expiryDate!.isBefore(DateTime.now());
     final bool isLowStock = product.quantity <= 5;
+
+    final double cardMargin = isMobile ? 8.0 : 16.0;
+    final double actionButtonSize = isMobile ? 28.0 : 32.0;
+    final double actionIconSize = isMobile ? 14.0 : 18.0;
+
     return Stack(
       children: <Widget>[
         Container(
-          margin: const EdgeInsets.all(16),
+          margin: EdgeInsets.all(cardMargin),
           decoration: BoxDecoration(
             color: const Color(0xFF4D4F5B),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: isExpired ? AppColors.error : (isExpiringSoon ? AppColors.warning : Colors.grey), width: isExpired || isExpiringSoon ? 2 : 1),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    decoration: BoxDecoration(color: const Color(0xFF4D4F5B), borderRadius: BorderRadius.circular(16)),
-                    child: Center(
-                      child: InkWell(
-                        onTap: () => Get.dialog(
-                          Dialog(
-                            child: ClipRRect(child: InteractiveViewer(child: Image.memory(product.image))),
-                          ),
+                    decoration: BoxDecoration(color: const Color(0xFF3D3F4A), borderRadius: BorderRadius.circular(12)),
+                    child: InkWell(
+                      onTap: () => Get.dialog(
+                        Dialog(
+                          child: ClipRRect(child: InteractiveViewer(child: Image.memory(product.image))),
                         ),
-                        child: Image.memory(product.image),
+                      ),
+                      child: Hero(
+                        tag: 'product-img-${product.id}',
+                        child: Image.memory(product.image, fit: BoxFit.contain),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Center(
                   child: InkWell(
                     onTap: () => Get.dialog(ProductDialog(product: product)),
                     child: Text(
                       product.name,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
-                      textAlign: .center,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
+                      textAlign: TextAlign.center,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Text(
                       '₱${product.sellingPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.greenAccent),
                     ),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
+                        // Minus Button
                         SizedBox(
-                          width: 32,
-                          height: 32,
+                          width: actionButtonSize,
+                          height: actionButtonSize,
                           child: Container(
                             decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
-                            child: IconButton(icon: const Icon(Icons.remove, size: 18), onPressed: controller.orderedProductsCount(product) > 0 ? () => controller.decrementCart(product, controller.orderedProductsCount(product)) : null, tooltip: 'Deduct', splashRadius: 18),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.remove, size: actionIconSize),
+                              onPressed: (controller.orderedProduct(product)?.quantity ?? 0) > 0 ? () => controller.decrementCart(product, controller.orderedProduct(product)?.quantity ?? 0) : null,
+                              tooltip: 'Deduct',
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        // SizedBox(
-                        //   width: 24,
-                        //   child: TextField(
-                        //     controller: TextEditingController(text: controller.orderedProductsCount(product).toString()),
-                        //     keyboardType: TextInputType.number,
-                        //     inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
-                        //     textAlign: TextAlign.center,
-                        //     decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
-                        //     onChanged: (String value) {
-                        //       final int? quantity = int.tryParse(value);
-                        //       if (quantity != null && quantity >= 0) {
-                        //         controller.updateProductQuantity(product, quantity);
-                        //       }
-                        //     },
-                        //   ),
-                        // ),
-                        // const SizedBox(width: 2),
+                        const SizedBox(width: 2),
+                        // Text Quantity Field
                         SizedBox(
                           width: 32,
-                          height: 32,
+                          child: TextField(
+                            controller: controller.getQuantityTextController(controller.orderedProduct(product)?.quantity ?? 0),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly, TextInputFormatter.withFunction((TextEditingValue oldValue, TextEditingValue newValue) => (int.tryParse(newValue.text) ?? 0) <= product.quantity ? newValue : oldValue)],
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 4)),
+                            onSubmitted: (String value) {
+                              final int? quantity = int.tryParse(value);
+                              if (quantity != null && quantity >= 0) {
+                                controller.updateProductQuantity(product, quantity);
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        // Plus Button
+                        SizedBox(
+                          width: actionButtonSize,
+                          height: actionButtonSize,
                           child: Container(
                             decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
-                            child: IconButton(icon: const Icon(Icons.add, size: 18), onPressed: product.quantity > 0 ? () => controller.incrementCart(product, controller.orderedProductsCount(product)) : null, tooltip: 'Add', splashRadius: 18),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.add, size: actionIconSize),
+                              onPressed: product.quantity != controller.orderedProduct(product)?.quantity ? () => controller.incrementCart(product, controller.orderedProduct(product)?.quantity ?? 0) : null,
+                              tooltip: 'Add',
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ],
                 ),
-                Text('${product.quantity} pcs', style: TextStyle(color: isLowStock ? Colors.red : Colors.white)),
+                const SizedBox(height: 4),
+                Text('${product.quantity} pcs left', style: TextStyle(fontSize: 12, color: isLowStock ? Colors.redAccent : Colors.white70)),
               ],
             ),
           ),
         ),
-        if (controller.orderedProductsCount(product) > 0)
+        // Cart count indicator badge
+        if ((controller.orderedProduct(product)?.quantity ?? 0) > 0)
           Positioned(
-            right: 10,
-            top: 10,
+            right: isMobile ? 4 : 10,
+            top: isMobile ? 4 : 10,
             child: Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(6),
               decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-              constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+              constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
               child: Center(
                 child: Text(
-                  controller.orderedProductsCount(product).toString(),
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  controller.orderedProduct(product)?.quantity.toString() ?? '0',
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -322,9 +355,7 @@ class OrdersView extends GetView<OrdersController> {
       return;
     }
 
-    final OrderModel order = controller.cartItems!;
-
-    Get.dialog(barrierDismissible: false, OrderReceiptDialog(order: order, controller: controller));
+    Get.dialog(barrierDismissible: false, OrderReceiptDialog(order: controller.cartItems!, controller: controller));
     if (controller.isLoading.value) {
       Get.dialog(const Center(child: CircularProgressIndicator()));
     }
@@ -465,7 +496,7 @@ class ProductDialog extends StatelessWidget {
               // Product Code with Scanner
               TextField(
                 readOnly: true,
-                controller: TextEditingController(text: product.code),
+                controller: TextEditingController(text: product.code.toString()),
                 decoration: InputDecoration(
                   labelText: 'Product Code *',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

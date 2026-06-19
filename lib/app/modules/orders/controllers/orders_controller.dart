@@ -17,6 +17,7 @@ class OrdersController extends GetxController {
   final RxString errorMessage = ''.obs;
   final RxString searchQuery = ''.obs;
   final TextEditingController searchQueryController = TextEditingController();
+  // final TextEditingController quantityTextController = TextEditingController(text: '0');
   final RxList<ProductModel> filteredProducts = <ProductModel>[].obs;
   final RxList<ProductModel> orderedProducts = <ProductModel>[].obs;
   OrderModel? cartItems;
@@ -60,14 +61,15 @@ class OrdersController extends GetxController {
   }
 
   /// Search product by barcode
-  ProductModel? searchProductByCode(String code) => products.firstWhere((ProductModel product) => product.code == code);
+  ProductModel? searchProductByCode(int code) => products.firstWhere((ProductModel product) => product.code == code);
 
   /// Filter products based on search query
   void filterProducts() {
     if (searchQuery.value.isEmpty) {
       filteredProducts.value = .from(products);
     } else {
-      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.toLowerCase().contains(searchQuery.value.toLowerCase())).toList();
+      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code == int.tryParse(searchQuery.value)).toList();
+      // filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.toLowerCase().contains(searchQuery.value.toLowerCase())).toList();
     }
   }
 
@@ -126,7 +128,6 @@ class OrdersController extends GetxController {
   void incrementCart(ProductModel product, int orderedProductsCount) {
     cart.value++;
     orderedProductsCount++;
-    product.quantity--;
     if (orderedProductsCount == 1) {
       orderedProducts.add(product.copyWith(quantity: 1));
     } else {
@@ -137,7 +138,6 @@ class OrdersController extends GetxController {
   void decrementCart(ProductModel product, int orderedProductsCount) {
     cart.value--;
     orderedProductsCount--;
-    product.quantity++;
     if (orderedProductsCount == 0) {
       orderedProducts.removeAt(orderedProducts.indexWhere((ProductModel p) => p.code == product.code));
     } else {
@@ -145,13 +145,23 @@ class OrdersController extends GetxController {
     }
   }
 
-  int orderedProductsCount(ProductModel product) => orderedProducts.firstWhereOrNull((ProductModel p) => p.code == product.code)?.quantity ?? 0;
+  ProductModel? orderedProduct(ProductModel product) => orderedProducts.firstWhereOrNull((ProductModel p) => p.code == product.code);
 
-  // void updateProductQuantity(ProductModel product, int quantity) => orderedProducts.add(product.copyWith(quantity: quantity));
+  void updateProductQuantity(ProductModel product, int quantity) {
+    if (orderedProduct(product) != null) {
+      orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.code == product.code)] = product.copyWith(quantity: quantity);
+    } else if (quantity != 0) {
+      orderedProducts.add(product.copyWith(quantity: quantity));
+    }
+    cart.value = orderedProducts.fold(0, (int sum, ProductModel product) => sum + product.quantity);
+  }
+
+  TextEditingController getQuantityTextController(int quantity) => TextEditingController(text: quantity.toString());
 
   @override
   void onClose() {
     searchQueryController.dispose();
+    // quantityTextController.dispose();
     super.onClose();
   }
 }

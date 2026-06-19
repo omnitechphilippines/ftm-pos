@@ -30,7 +30,10 @@ class ProductsView extends GetView<ProductsController> {
             : Column(
                 children: <Widget>[
                   // Search Bar
-                  CustomSearchBar(controller: controller),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: CustomSearchBar(controller: controller),
+                  ),
                   // Padding(
                   //   padding: const EdgeInsets.all(16.0),
                   //   child: TextField(

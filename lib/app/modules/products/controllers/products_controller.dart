@@ -79,7 +79,8 @@ class ProductsController extends GetxController {
     if (searchQuery.value.isEmpty) {
       filteredProducts.value = products;
     } else {
-      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.toLowerCase().contains(searchQuery.value.toLowerCase())).toList();
+      // filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.contains(searchQuery.value.toLowerCase())).toList();
+      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code == int.tryParse(searchQuery.value)).toList();
     }
   }
 
@@ -173,7 +174,7 @@ class ProductsController extends GetxController {
 
       final ProductModel product = ProductModel(
         id: const Uuid().v4(),
-        code: codeController.text.trim(),
+        code: int.parse(codeController.text),
         name: nameController.text.trim(),
         originalPrice: double.parse(originalPriceController.text),
         sellingPrice: double.parse(sellingPriceController.text),
@@ -214,7 +215,7 @@ class ProductsController extends GetxController {
 
       final ProductModel updatedProduct = ProductModel(
         id: productId,
-        code: codeController.text.trim(),
+        code: int.parse(codeController.text),
         name: nameController.text.trim(),
         sellingPrice: double.parse(sellingPriceController.text),
         originalPrice: double.parse(originalPriceController.text),
@@ -283,7 +284,7 @@ class ProductsController extends GetxController {
 
   // Load product data into form for editing
   void loadProductToForm(ProductModel product) {
-    codeController.text = product.code;
+    codeController.text = product.code.toString();
     nameController.text = product.name;
     sellingPriceController.text = product.sellingPrice.toString();
     originalPriceController.text = product.originalPrice.toString();
