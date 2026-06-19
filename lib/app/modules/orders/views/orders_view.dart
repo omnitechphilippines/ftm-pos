@@ -17,6 +17,7 @@ import '../controllers/orders_controller.dart';
 
 class OrdersView extends GetView<OrdersController> {
   const OrdersView({super.key});
+
   @override
   Widget build(BuildContext context) {
     final String currentRoute = Get.currentRoute.isNotEmpty ? Get.currentRoute : (Get.routing.current.isNotEmpty ? Get.routing.current : ModalRoute.of(context)?.settings.name ?? '/');
@@ -74,47 +75,53 @@ class OrdersView extends GetView<OrdersController> {
 
                   // Product Cards List
                   Expanded(
-                    child: Obx(
-                      () => controller.filteredProducts.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[400]),
-                                  const SizedBox(height: 16),
-                                  Text('No products found', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
-                                ],
-                              ),
-                            )
-                          : RefreshIndicator(
-                              onRefresh: () => controller.fetchProducts(),
-                              child: LayoutBuilder(
-                                builder: (BuildContext context, BoxConstraints constraints) {
-                                  final double width = constraints.maxWidth;
-                                  final int crossAxisCount = (width / 250).floor().clamp(2, 8);
-
-                                  return GridView.builder(
-                                    itemCount: controller.filteredProducts.length,
-                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: crossAxisCount, childAspectRatio: 0.75),
-                                    itemBuilder: (BuildContext context, int index) {
-                                      final ProductModel product = controller.filteredProducts[index];
-                                      return Obx(() => _buildOrderCard(product));
-                                    },
-                                  );
-                                },
-                              ),
+                    child: controller.filteredProducts.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[400]),
+                                const SizedBox(height: 16),
+                                Text('No products found', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+                              ],
                             ),
-                    ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: () => controller.fetchProducts(),
+                            child: LayoutBuilder(
+                              builder: (BuildContext context, BoxConstraints constraints) {
+                                final double width = constraints.maxWidth;
+                                final int crossAxisCount = (width / 250).floor().clamp(2, 8);
+
+                                return GridView.builder(
+                                  itemCount: controller.filteredProducts.length,
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: crossAxisCount, childAspectRatio: 0.75),
+                                  itemBuilder: (BuildContext context, int index) {
+                                    final ProductModel product = controller.filteredProducts[index];
+                                    return OrderCard(product: product);
+                                  },
+                                );
+                              },
+                            ),
+                          ),
                   ),
                 ],
               ),
       ),
     );
   }
+}
 
-  Widget _buildOrderCard(ProductModel product) {
+class OrderCard extends StatelessWidget {
+  final ProductModel product;
+
+  const OrderCard({super.key, required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    final OrdersController controller = Get.find<OrdersController>();
     final ResponsiveService responsive = Get.find<ResponsiveService>();
-    final bool isMobile = responsive.isMobile(Get.context!);
+    final bool isMobile = responsive.isMobile(context);
 
     final bool isExpiringSoon = product.expiryDate != null && product.expiryDate!.difference(DateTime.now()).inDays <= 30 && product.expiryDate!.isAfter(DateTime.now());
     final bool isExpired = product.expiryDate != null && product.expiryDate!.isBefore(DateTime.now());
@@ -124,135 +131,138 @@ class OrdersView extends GetView<OrdersController> {
     final double actionButtonSize = isMobile ? 28.0 : 32.0;
     final double actionIconSize = isMobile ? 14.0 : 18.0;
 
-    return Stack(
-      children: <Widget>[
-        Container(
-          margin: EdgeInsets.all(cardMargin),
-          decoration: BoxDecoration(
-            color: const Color(0xFF4D4F5B),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: isExpired ? AppColors.error : (isExpiringSoon ? AppColors.warning : Colors.grey), width: isExpired || isExpiringSoon ? 2 : 1),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(color: const Color(0xFF3D3F4A), borderRadius: BorderRadius.circular(12)),
-                    child: InkWell(
-                      onTap: () => Get.dialog(Dialog(child: InteractiveViewer(child: product.image != null ? Image.memory(product.image!) : const Icon(Icons.image_outlined, size: 250)))),
-                      child: Hero(
-                        tag: 'product-img-${product.id}',
-                        child: product.image != null ? Image.memory(product.image!, fit: BoxFit.contain) : const Icon(Icons.image_outlined, size: 100),
+    return Obx(() {
+      final int currentOrderedQty = controller.orderedProduct(product)?.quantity ?? 0;
+      return Stack(
+        children: <Widget>[
+          Container(
+            margin: EdgeInsets.all(cardMargin),
+            decoration: BoxDecoration(
+              color: const Color(0xFF4D4F5B),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: isExpired ? AppColors.error : (isExpiringSoon ? AppColors.warning : Colors.grey), width: isExpired || isExpiringSoon ? 2 : 1),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(color: const Color(0xFF3D3F4A), borderRadius: BorderRadius.circular(12)),
+                      child: InkWell(
+                        onTap: () => Get.dialog(Dialog(child: InteractiveViewer(child: product.image != null ? Image.memory(product.image!) : const Icon(Icons.image_outlined, size: 250)))),
+                        child: Hero(
+                          tag: 'product-img-${product.id}',
+                          child: product.image != null ? Image.memory(product.image!, fit: BoxFit.contain) : const Icon(Icons.image_outlined, size: 100),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Center(
-                  child: InkWell(
-                    onTap: () => Get.dialog(ProductDialog(product: product)),
-                    child: Text(
-                      product.name,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
-                      textAlign: TextAlign.center,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: 8),
+                  Center(
+                    child: InkWell(
+                      onTap: () => Get.dialog(ProductDialog(product: product)),
+                      child: Text(
+                        product.name,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
+                        textAlign: TextAlign.center,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text(
-                      '₱${product.sellingPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.greenAccent),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        // Minus Button
-                        SizedBox(
-                          width: actionButtonSize,
-                          height: actionButtonSize,
-                          child: Container(
-                            decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.remove, size: actionIconSize),
-                              onPressed: (controller.orderedProduct(product)?.quantity ?? 0) > 0 ? () => controller.decrementCart(product, controller.orderedProduct(product)?.quantity ?? 0) : null,
-                              tooltip: 'Deduct',
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Text(
+                        '₱${product.sellingPrice.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.greenAccent),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          // Minus Button
+                          SizedBox(
+                            width: actionButtonSize,
+                            height: actionButtonSize,
+                            child: Container(
+                              decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                icon: Icon(Icons.remove, size: actionIconSize),
+                                onPressed: currentOrderedQty > 0 ? () => controller.decrementCart(product, currentOrderedQty) : null,
+                                tooltip: 'Deduct',
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 2),
-                        // Text Quantity Field
-                        SizedBox(
-                          width: 32,
-                          child: TextField(
-                            controller: controller.getQuantityTextController(controller.orderedProduct(product)?.quantity ?? 0),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly, TextInputFormatter.withFunction((TextEditingValue oldValue, TextEditingValue newValue) => (int.tryParse(newValue.text) ?? 0) <= product.quantity ? newValue : oldValue)],
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.white, fontSize: 13),
-                            decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 4)),
-                            onSubmitted: (String value) {
-                              final int? quantity = int.tryParse(value);
-                              if (quantity != null && quantity >= 0) {
-                                controller.updateProductQuantity(product, quantity);
-                              }
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        // Plus Button
-                        SizedBox(
-                          width: actionButtonSize,
-                          height: actionButtonSize,
-                          child: Container(
-                            decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.add, size: actionIconSize),
-                              onPressed: product.quantity != controller.orderedProduct(product)?.quantity ? () => controller.incrementCart(product, controller.orderedProduct(product)?.quantity ?? 0) : null,
-                              tooltip: 'Add',
+                          const SizedBox(width: 2),
+                          // Text Quantity Field
+                          SizedBox(
+                            width: 32,
+                            child: TextField(
+                              controller: controller.getQuantityTextController(currentOrderedQty),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly, TextInputFormatter.withFunction((TextEditingValue oldValue, TextEditingValue newValue) => (int.tryParse(newValue.text) ?? 0) <= product.quantity ? newValue : oldValue)],
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white, fontSize: 13),
+                              decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 4)),
+                              onSubmitted: (String value) {
+                                final int? quantity = int.tryParse(value);
+                                if (quantity != null && quantity >= 0) {
+                                  controller.updateProductQuantity(product, quantity);
+                                }
+                              },
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text('${product.quantity} pcs left', style: TextStyle(fontSize: 12, color: isLowStock ? Colors.redAccent : Colors.white70)),
-              ],
-            ),
-          ),
-        ),
-        // Cart count indicator badge
-        if ((controller.orderedProduct(product)?.quantity ?? 0) > 0)
-          Positioned(
-            right: isMobile ? 4 : 10,
-            top: isMobile ? 4 : 10,
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-              constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
-              child: Center(
-                child: Text(
-                  controller.orderedProduct(product)?.quantity.toString() ?? '0',
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                ),
+                          const SizedBox(width: 2),
+                          // Plus Button
+                          SizedBox(
+                            width: actionButtonSize,
+                            height: actionButtonSize,
+                            child: Container(
+                              decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                icon: Icon(Icons.add, size: actionIconSize),
+                                onPressed: product.quantity != currentOrderedQty ? () => controller.incrementCart(product, currentOrderedQty) : null,
+                                tooltip: 'Add',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text('${product.quantity} pcs left', style: TextStyle(fontSize: 12, color: isLowStock ? Colors.redAccent : Colors.white70)),
+                ],
               ),
             ),
           ),
-      ],
-    );
+          // Cart count indicator badge
+          if (currentOrderedQty > 0)
+            Positioned(
+              right: isMobile ? 4 : 10,
+              top: isMobile ? 4 : 10,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+                child: Center(
+                  child: Text(
+                    currentOrderedQty.toString(),
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+    });
   }
 }
 
