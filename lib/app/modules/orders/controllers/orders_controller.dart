@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../models/order_model.dart';
 import '../../../../models/product_model.dart';
+import '../views/orders_view.dart';
 
 class OrdersController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -16,8 +18,7 @@ class OrdersController extends GetxController {
   final RxList<ProductModel> products = <ProductModel>[].obs;
   final RxString errorMessage = ''.obs;
   final RxString searchQuery = ''.obs;
-  final TextEditingController searchQueryController = TextEditingController();
-  // final TextEditingController quantityTextController = TextEditingController(text: '0');
+  final TextEditingController searchInputController = TextEditingController();
   final RxList<ProductModel> filteredProducts = <ProductModel>[].obs;
   final RxList<ProductModel> orderedProducts = <ProductModel>[].obs;
   OrderModel? cartItems;
@@ -30,8 +31,6 @@ class OrdersController extends GetxController {
   void onInit() {
     super.onInit();
     fetchProducts();
-
-    debounce(searchQuery, (_) => filterProducts(), time: const Duration(milliseconds: 300));
   }
 
   /// Initialize barcode scanner
@@ -69,7 +68,6 @@ class OrdersController extends GetxController {
       filteredProducts.value = .from(products);
     } else {
       filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code == int.tryParse(searchQuery.value)).toList();
-      // filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.toLowerCase().contains(searchQuery.value.toLowerCase())).toList();
     }
   }
 
@@ -158,10 +156,44 @@ class OrdersController extends GetxController {
 
   TextEditingController getQuantityTextController(int quantity) => TextEditingController(text: quantity.toString());
 
+  void showCartDialog() {
+    orderedProducts.sort((ProductModel a, ProductModel b) => a.name.compareTo(b.name));
+    cartItems = OrderModel(
+      id: const Uuid().v4(),
+      code: orderedProducts.map((ProductModel product) => product.code).toList(),
+      name: orderedProducts.map((ProductModel product) => product.name).toList(),
+      originalPrice: orderedProducts.map((ProductModel product) => product.originalPrice).toList(),
+      sellingPrice: orderedProducts.map((ProductModel product) => product.sellingPrice).toList(),
+      amount: orderedProducts.map((ProductModel product) => product.sellingPrice * product.quantity).toList(),
+      quantity: orderedProducts.map((ProductModel product) => product.quantity).toList(),
+      total: orderedProducts.fold(0.0, (double sum, ProductModel product) => sum + product.sellingPrice * product.quantity),
+      orderAt: DateTime.now(),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    if (cartItems == null || cartItems!.name.isEmpty) {
+      Get.snackbar(
+        '',
+        '',
+        snackPosition: .BOTTOM,
+        backgroundColor: Colors.white,
+        borderRadius: 0,
+        titleText: const SizedBox.shrink(),
+        messageText: const Text('Your cart is empty!', style: TextStyle(color: Colors.black)),
+      );
+      return;
+    }
+
+    Get.dialog(barrierDismissible: false, OrderReceiptDialog(order: cartItems!));
+    if (isLoading.value) {
+      Get.dialog(const Center(child: CircularProgressIndicator()));
+    }
+  }
+
   @override
   void onClose() {
-    searchQueryController.dispose();
-    // quantityTextController.dispose();
+    searchInputController.dispose();
     super.onClose();
   }
 }

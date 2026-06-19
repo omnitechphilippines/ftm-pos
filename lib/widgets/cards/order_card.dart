@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -29,7 +31,7 @@ class OrderCard extends StatelessWidget {
                 decoration: BoxDecoration(color: const Color(0xFF4D4F5B), borderRadius: BorderRadius.circular(16)),
                 child: Stack(
                   children: <Widget>[
-                    Center(child: Image.memory(product.image)),
+                    Center(child: Image.memory(product.image ?? Uint8List(0))),
                     const Positioned(top: 0, right: 0, child: Icon(Icons.more_vert, size: 16, color: Colors.white)),
                   ],
                 ),

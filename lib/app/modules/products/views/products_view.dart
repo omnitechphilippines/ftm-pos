@@ -32,20 +32,15 @@ class ProductsView extends GetView<ProductsController> {
                   // Search Bar
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: CustomSearchBar(controller: controller),
+                    child: CustomSearchBar(
+                      textEditingController: controller.searchInputController,
+                      onSubmitted: (String value) {
+                        controller.searchQuery.value = value;
+                        controller.filterProducts();
+                      },
+                      hintText: 'Search by name or code...',
+                    ),
                   ),
-                  // Padding(
-                  //   padding: const EdgeInsets.all(16.0),
-                  //   child: TextField(
-                  //     onChanged: (String value) => controller.searchQuery.value = value,
-                  //     decoration: InputDecoration(
-                  //       hintText: 'Search by name or code...',
-                  //       prefixIcon: const Icon(Icons.search),
-                  //       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  //       filled: true,
-                  //     ),
-                  //   ),
-                  // ),
 
                   // Product List
                   Expanded(
@@ -100,15 +95,10 @@ class ProductsView extends GetView<ProductsController> {
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         leading: InkWell(
-          onTap: () => Get.dialog(
-            Dialog(
-              insetPadding: const EdgeInsets.all(16),
-              child: InteractiveViewer(child: Image.memory(product.image)),
-            ),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.memory(product.image, width: 50, height: 50, fit: BoxFit.contain),
+          onTap: () => Get.dialog(Dialog(child: product.image != null ? InteractiveViewer(child: Image.memory(product.image!)) : const Icon(Icons.image_outlined, size: 250))),
+          child: Hero(
+            tag: 'product-img-${product.id}',
+            child: product.image != null ? Image.memory(product.image!, width: 50, height: 50, fit: BoxFit.contain) : const Icon(Icons.image_outlined, size: 50),
           ),
         ),
         title: Text(product.weight!.isNotEmpty ? '${product.name} - ${product.weight}' : product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),

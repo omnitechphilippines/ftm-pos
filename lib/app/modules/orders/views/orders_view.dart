@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../../models/order_model.dart';
 import '../../../../models/product_model.dart';
@@ -29,11 +28,11 @@ class OrdersView extends GetView<OrdersController> {
           actions: controller.isLoading.value
               ? null
               : <Widget>[
-                  IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: () => _showScannerDialog(), tooltip: 'Scan Barcode'),
+                  IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: () => Get.dialog(barrierDismissible: false, const ScannerDialog()).then((_) => controller.disposeScanner()), tooltip: 'Scan Barcode'),
                   Obx(
                     () => Stack(
                       children: <Widget>[
-                        IconButton(icon: const Icon(Icons.shopping_cart), onPressed: () => _showCartDialog(), tooltip: 'Cart'),
+                        IconButton(icon: const Icon(Icons.shopping_cart), onPressed: () => controller.showCartDialog(), tooltip: 'Cart'),
                         if (controller.cart.value > 0)
                           Positioned(
                             right: 0,
@@ -63,7 +62,14 @@ class OrdersView extends GetView<OrdersController> {
                   // Search Bar
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: CustomSearchBar(controller: controller),
+                    child: CustomSearchBar(
+                      textEditingController: controller.searchInputController,
+                      onSubmitted: (String value) {
+                        controller.searchQuery.value = value;
+                        controller.filterProducts();
+                      },
+                      hintText: 'Search by name or code...',
+                    ),
                   ),
 
                   // Product Cards List
@@ -106,79 +112,6 @@ class OrdersView extends GetView<OrdersController> {
     );
   }
 
-  void _showScannerDialog({Function(String)? onScanned}) {
-    controller.initializeScanner();
-
-    Get.dialog(
-      barrierDismissible: false,
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          height: 400,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: <Widget>[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  const Text('Scan Barcode', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      controller.disposeScanner();
-                      Get.back();
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: MobileScanner(
-                    controller: controller.scannerController,
-                    onDetect: (BarcodeCapture capture) async {
-                      final List<Barcode> barcodes = capture.barcodes;
-                      if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
-                        final String code = barcodes.first.rawValue!;
-                        controller.disposeScanner();
-                        Get.back();
-
-                        if (onScanned != null) {
-                          onScanned(code);
-                        } else {
-                          // Search for existing product
-                          final ProductModel? product = controller.searchProductByCode(int.parse(code));
-                          if (product != null) {
-                            controller.incrementCart(product, controller.orderedProduct(product)?.quantity ?? 0);
-                            controller.searchQuery.value = product.code.toString();
-                            controller.searchQueryController.text = product.code.toString();
-                          } else {
-                            Get.snackbar(
-                              '',
-                              '',
-                              snackPosition: .BOTTOM,
-                              backgroundColor: Colors.white,
-                              borderRadius: 0,
-                              titleText: const SizedBox.shrink(),
-                              messageText: const Text('Product not found!', style: TextStyle(color: Colors.black)),
-                            );
-                          }
-                        }
-                      }
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text('Position the barcode within the frame', style: TextStyle(color: Colors.grey)),
-            ],
-          ),
-        ),
-      ),
-    ).then((_) => controller.disposeScanner());
-  }
-
   Widget _buildOrderCard(ProductModel product) {
     final ResponsiveService responsive = Get.find<ResponsiveService>();
     final bool isMobile = responsive.isMobile(Get.context!);
@@ -211,14 +144,10 @@ class OrdersView extends GetView<OrdersController> {
                     width: double.infinity,
                     decoration: BoxDecoration(color: const Color(0xFF3D3F4A), borderRadius: BorderRadius.circular(12)),
                     child: InkWell(
-                      onTap: () => Get.dialog(
-                        Dialog(
-                          child: ClipRRect(child: InteractiveViewer(child: Image.memory(product.image))),
-                        ),
-                      ),
+                      onTap: () => Get.dialog(Dialog(child: InteractiveViewer(child: product.image != null ? Image.memory(product.image!) : const Icon(Icons.image_outlined, size: 250)))),
                       child: Hero(
                         tag: 'product-img-${product.id}',
-                        child: Image.memory(product.image, fit: BoxFit.contain),
+                        child: product.image != null ? Image.memory(product.image!, fit: BoxFit.contain) : const Icon(Icons.image_outlined, size: 100),
                       ),
                     ),
                   ),
@@ -325,51 +254,87 @@ class OrdersView extends GetView<OrdersController> {
       ],
     );
   }
+}
 
-  void _showCartDialog() {
-    controller.orderedProducts.sort((ProductModel a, ProductModel b) => a.name.compareTo(b.name));
-    controller.cartItems = OrderModel(
-      id: const Uuid().v4(),
-      code: controller.orderedProducts.map((ProductModel product) => product.code).toList(),
-      name: controller.orderedProducts.map((ProductModel product) => product.name).toList(),
-      originalPrice: controller.orderedProducts.map((ProductModel product) => product.originalPrice).toList(),
-      sellingPrice: controller.orderedProducts.map((ProductModel product) => product.sellingPrice).toList(),
-      amount: controller.orderedProducts.map((ProductModel product) => product.sellingPrice * product.quantity).toList(),
-      quantity: controller.orderedProducts.map((ProductModel product) => product.quantity).toList(),
-      total: controller.orderedProducts.fold(0.0, (double sum, ProductModel product) => sum + product.sellingPrice * product.quantity),
-      orderAt: DateTime.now(),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+class ScannerDialog extends StatelessWidget {
+  const ScannerDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final OrdersController controller = Get.find<OrdersController>();
+    controller.initializeScanner();
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        height: 400,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                const Text('Scan Barcode', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    controller.disposeScanner();
+                    Get.back();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: MobileScanner(
+                  controller: controller.scannerController,
+                  onDetect: (BarcodeCapture capture) async {
+                    final List<Barcode> barcodes = capture.barcodes;
+                    if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
+                      final String code = barcodes.first.rawValue!;
+                      controller.disposeScanner();
+                      Get.back();
+
+                      // Search for existing product
+                      final ProductModel? product = controller.searchProductByCode(int.parse(code));
+                      if (product != null) {
+                        controller.incrementCart(product, controller.orderedProduct(product)?.quantity ?? 0);
+                        controller.searchQuery.value = product.code.toString();
+                        controller.searchInputController.text = product.code.toString();
+                      } else {
+                        Get.snackbar(
+                          '',
+                          '',
+                          snackPosition: .BOTTOM,
+                          backgroundColor: Colors.white,
+                          borderRadius: 0,
+                          titleText: const SizedBox.shrink(),
+                          messageText: const Text('Product not found!', style: TextStyle(color: Colors.black)),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Position the barcode within the frame', style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      ),
     );
-
-    if (controller.cartItems == null || controller.cartItems!.name.isEmpty) {
-      Get.snackbar(
-        '',
-        '',
-        snackPosition: .BOTTOM,
-        backgroundColor: Colors.white,
-        borderRadius: 0,
-        titleText: const SizedBox.shrink(),
-        messageText: const Text('Your cart is empty!', style: TextStyle(color: Colors.black)),
-      );
-      return;
-    }
-
-    Get.dialog(barrierDismissible: false, OrderReceiptDialog(order: controller.cartItems!, controller: controller));
-    if (controller.isLoading.value) {
-      Get.dialog(const Center(child: CircularProgressIndicator()));
-    }
   }
 }
 
 class OrderReceiptDialog extends StatelessWidget {
-  const OrderReceiptDialog({super.key, required this.order, required this.controller});
+  const OrderReceiptDialog({super.key, required this.order});
 
   final OrderModel order;
-  final OrdersController controller;
 
   @override
   Widget build(BuildContext context) {
+    final OrdersController controller = Get.find<OrdersController>();
     return AlertDialog(
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -602,7 +567,7 @@ class ProductDialog extends StatelessWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.memory(product.image, fit: BoxFit.contain),
+                        child: product.image != null ? Image.memory(product.image!, fit: BoxFit.contain) : const Icon(Icons.image_outlined, size: 200),
                       ),
                     ),
                   ),

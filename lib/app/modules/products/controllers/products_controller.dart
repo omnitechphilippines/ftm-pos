@@ -18,7 +18,7 @@ class ProductsController extends GetxController {
   final RxList<ProductModel> filteredProducts = <ProductModel>[].obs;
   final RxBool isLoading = false.obs;
   final RxString searchQuery = ''.obs;
-  final TextEditingController searchQueryController = TextEditingController();
+  final TextEditingController searchInputController = TextEditingController();
   final RxString errorMessage = ''.obs;
 
   // Form controllers
@@ -40,9 +40,6 @@ class ProductsController extends GetxController {
   void onInit() {
     super.onInit();
     fetchProducts();
-
-    // Listen to search query changes
-    debounce(searchQuery, (_) => filterProducts());
   }
 
   @override
@@ -79,7 +76,6 @@ class ProductsController extends GetxController {
     if (searchQuery.value.isEmpty) {
       filteredProducts.value = products;
     } else {
-      // filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.contains(searchQuery.value.toLowerCase())).toList();
       filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code == int.tryParse(searchQuery.value)).toList();
     }
   }
@@ -181,7 +177,7 @@ class ProductsController extends GetxController {
         quantity: int.parse(quantityController.text),
         weight: weightController.text.trim(),
         expiryDate: expiryDate.value,
-        image: selectedImage.value!,
+        image: selectedImage.value,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -333,10 +329,10 @@ class ProductsController extends GetxController {
       return false;
     }
 
-    if (selectedImage.value == null) {
-      Get.snackbar('Error', 'Image is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
-      return false;
-    }
+    // if (selectedImage.value == null) {
+    //   Get.snackbar('Error', 'Image is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
+    //   return false;
+    // }
 
     return true;
   }
