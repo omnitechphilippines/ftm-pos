@@ -9,6 +9,7 @@ import '../../../../models/order_model.dart';
 import '../../../../models/product_model.dart';
 import '../../../../services/responsive_service.dart';
 import '../../../../themes/app_theme.dart';
+import '../../../../utils/formatters.dart';
 import '../../../../widgets/app_bars/custom_app_bar.dart';
 import '../../../../widgets/drawers/side_drawer.dart';
 import '../../../../widgets/loading_indicators/loading_indicator.dart';
@@ -179,7 +180,7 @@ class OrderCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                       Text(
-                        '₱${product.sellingPrice.toStringAsFixed(2)}',
+                        '₱${numberFormatter.format(product.sellingPrice)}',
                         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.greenAccent),
                       ),
                       Row(
@@ -287,8 +288,8 @@ class ScannerDialog extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () {
-                    controller.disposeScanner();
                     Get.back();
+                    controller.disposeScanner();
                   },
                 ),
               ],
@@ -303,25 +304,16 @@ class ScannerDialog extends StatelessWidget {
                     final List<Barcode> barcodes = capture.barcodes;
                     if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
                       final String code = barcodes.first.rawValue!;
-                      controller.disposeScanner();
                       Get.back();
+                      controller.disposeScanner();
 
                       // Search for existing product
                       final ProductModel? product = controller.searchProductByCode(int.parse(code));
+                      controller.searchQuery.value = code;
+                      controller.searchInputController.text = code;
+                      controller.filterProducts();
                       if (product != null) {
                         controller.incrementCart(product, controller.orderedProduct(product)?.quantity ?? 0);
-                        controller.searchQuery.value = product.code.toString();
-                        controller.searchInputController.text = product.code.toString();
-                      } else {
-                        Get.snackbar(
-                          '',
-                          '',
-                          snackPosition: .BOTTOM,
-                          backgroundColor: Colors.white,
-                          borderRadius: 0,
-                          titleText: const SizedBox.shrink(),
-                          messageText: const Text('Product not found!', style: TextStyle(color: Colors.black)),
-                        );
                       }
                     }
                   },
@@ -344,11 +336,12 @@ class OrderReceiptDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ResponsiveService responsive = Get.find<ResponsiveService>();
     final OrdersController controller = Get.find<OrdersController>();
     return AlertDialog(
       title: Row(
         mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: .spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
           const Row(
             children: <Widget>[
@@ -362,7 +355,7 @@ class OrderReceiptDialog extends StatelessWidget {
       ),
       content: IntrinsicWidth(
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: Get.size.width * 0.9),
+          constraints: BoxConstraints(maxWidth: responsive.screenWidth(context) * 0.9),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -374,42 +367,48 @@ class OrderReceiptDialog extends StatelessWidget {
 
                 // Table Layout for Items, Price, Qty, Amount
                 Center(
-                  child: SingleChildScrollView(
-                    scrollDirection: .horizontal,
-                    child: DataTable(
-                      columnSpacing: 6,
-                      horizontalMargin: 0,
-                      columns: const <DataColumn>[
-                        DataColumn(
-                          label: Text('No.', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        DataColumn(
-                          label: Text('Item', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        DataColumn(
-                          label: Text('Price', style: TextStyle(fontWeight: FontWeight.bold)),
-                          numeric: true,
-                        ),
-                        DataColumn(
-                          label: Text('Qty', style: TextStyle(fontWeight: FontWeight.bold)),
-                          numeric: true,
-                        ),
-                        DataColumn(
-                          label: Text('Amount', style: TextStyle(fontWeight: FontWeight.bold)),
-                          numeric: true,
-                        ),
-                      ],
-                      rows: List<DataRow>.generate(order.name.length, (int index) {
-                        String displayName = order.name[index];
-                        if (displayName.length > 16) {
-                          displayName = '${displayName.substring(0, 15)}...';
-                        }
-
-                        return DataRow(
-                          cells: <DataCell>[DataCell(Text((index + 1).toString())), DataCell(Text(displayName)), DataCell(Text('₱${order.sellingPrice[index].toStringAsFixed(2)}')), DataCell(Text('x${order.quantity[index]}')), DataCell(Text('₱${order.amount[index].toStringAsFixed(2)}'))],
-                        );
-                      }),
-                    ),
+                  child: DataTable(
+                    columnSpacing: 6,
+                    horizontalMargin: 0,
+                    dataRowMinHeight: 40,
+                    dataRowMaxHeight: double.infinity,
+                    columns: const <DataColumn>[
+                      DataColumn(
+                        label: Text('No.', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      DataColumn(
+                        label: Text('Item', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      DataColumn(
+                        label: Text('Price', style: TextStyle(fontWeight: FontWeight.bold)),
+                        numeric: true,
+                      ),
+                      DataColumn(
+                        label: Text('Qty', style: TextStyle(fontWeight: FontWeight.bold)),
+                        numeric: true,
+                      ),
+                      DataColumn(
+                        label: Text('Amount', style: TextStyle(fontWeight: FontWeight.bold)),
+                        numeric: true,
+                      ),
+                    ],
+                    rows: List<DataRow>.generate(order.name.length, (int index) {
+                      return DataRow(
+                        cells: <DataCell>[
+                          DataCell(Text((index + 1).toString())),
+                          DataCell(
+                            Container(
+                              constraints: BoxConstraints(maxWidth: responsive.screenWidth(context) * 0.35),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Text(order.name[index], softWrap: true),
+                            ),
+                          ),
+                          DataCell(Text('₱${numberFormatter.format(order.sellingPrice[index])}')),
+                          DataCell(Text('x${order.quantity[index]}')),
+                          DataCell(Text('₱${numberFormatter.format(order.amount[index])}')),
+                        ],
+                      );
+                    }),
                   ),
                 ),
 
@@ -421,7 +420,7 @@ class OrderReceiptDialog extends StatelessWidget {
                   children: <Widget>[
                     const Text('TOTAL:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     Text(
-                      '₱${order.total.toStringAsFixed(2)}',
+                      '₱${numberFormatter.format(order.total)}',
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
                     ),
                   ],
@@ -448,10 +447,11 @@ class ProductDialog extends StatelessWidget {
   const ProductDialog({super.key, required this.product});
   @override
   Widget build(BuildContext context) {
+    final ResponsiveService responsive = Get.find<ResponsiveService>();
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        width: Get.size.width * 0.9,
+        width: responsive.screenWidth(context) * 0.9,
         constraints: const BoxConstraints(maxWidth: 600),
         padding: const EdgeInsets.all(24),
         child: SingleChildScrollView(
@@ -471,7 +471,7 @@ class ProductDialog extends StatelessWidget {
               // Product Code with Scanner
               TextField(
                 readOnly: true,
-                controller: TextEditingController(text: product.code.toString()),
+                controller: TextEditingController(text: product.code.toString().padLeft(13, '0')),
                 decoration: InputDecoration(
                   labelText: 'Product Code *',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

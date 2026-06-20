@@ -36,6 +36,8 @@ class ProductsController extends GetxController {
   // Scanner controller
   MobileScannerController? scannerController;
 
+  final RxBool isEditingForm = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -54,7 +56,7 @@ class ProductsController extends GetxController {
     super.onClose();
   }
 
-  // Fetch all products from Supabase
+  /// Fetch all products from Supabase
   Future<void> fetchProducts() async {
     try {
       isLoading.value = true;
@@ -71,16 +73,16 @@ class ProductsController extends GetxController {
     }
   }
 
-  // Filter products based on search query
+  /// Filter products based on search query
   void filterProducts() {
     if (searchQuery.value.isEmpty) {
       filteredProducts.value = products;
     } else {
-      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code == int.tryParse(searchQuery.value)).toList();
+      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.toString().contains(searchQuery.value)).toList();
     }
   }
 
-  // Pick image from camera
+  /// Pick image from camera
   Future<void> pickImageFromCamera() async {
     try {
       final XFile? image = await _imagePicker.pickImage(source: ImageSource.camera, maxWidth: 800, maxHeight: 800, imageQuality: 85);
@@ -95,7 +97,7 @@ class ProductsController extends GetxController {
     }
   }
 
-  // Pick image from gallery
+  /// Pick image from gallery
   Future<void> pickImageFromGallery() async {
     try {
       final FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
@@ -112,7 +114,7 @@ class ProductsController extends GetxController {
     }
   }
 
-  // Show image picker options
+  /// Show image picker options
   void showImagePickerOptions() {
     Get.bottomSheet(
       Container(
@@ -158,7 +160,7 @@ class ProductsController extends GetxController {
     );
   }
 
-  // Create a new product
+  /// Create a new product
   Future<void> createProduct() async {
     if (!_validateForm()) {
       return;
@@ -199,7 +201,7 @@ class ProductsController extends GetxController {
     }
   }
 
-  // Update an existing product
+  /// Update an existing product
   Future<void> updateProduct(String productId) async {
     if (!_validateForm()) {
       return;
@@ -243,7 +245,7 @@ class ProductsController extends GetxController {
     }
   }
 
-  // Delete a product
+  /// Delete a product
   Future<void> deleteProduct(String productId) async {
     try {
       isLoading.value = true;
@@ -263,22 +265,10 @@ class ProductsController extends GetxController {
     }
   }
 
-  // Search product by barcode
-  Future<ProductModel?> searchProductByCode(String code) async {
-    try {
-      final PostgrestMap? response = await _supabase.from('products_master').select().eq('code', code).maybeSingle();
+  /// Search product by barcode
+  ProductModel? searchProductByCode(int code) => products.firstWhereOrNull((ProductModel product) => product.code == code);
 
-      if (response != null) {
-        return ProductModel.fromJson(response);
-      }
-      return null;
-    } catch (e) {
-      errorMessage.value = 'Failed to search product: $e';
-      return null;
-    }
-  }
-
-  // Load product data into form for editing
+  /// Load product data into form for editing
   void loadProductToForm(ProductModel product) {
     codeController.text = product.code.toString();
     nameController.text = product.name;
@@ -304,8 +294,8 @@ class ProductsController extends GetxController {
 
   // Validate form
   bool _validateForm() {
-    if (codeController.text.trim().isEmpty) {
-      Get.snackbar('Error', 'Product code is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
+    if (codeController.text.trim().isEmpty && codeController.text.trim().length != 13) {
+      Get.snackbar('Error', 'Product code is required and have 13 digits', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
       return false;
     }
 

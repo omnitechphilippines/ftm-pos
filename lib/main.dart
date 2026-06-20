@@ -15,7 +15,6 @@ void main() async {
   usePathUrlStrategy();
   await Supabase.initialize(
     url: 'https://tzocbumydgkhnznohrvn.supabase.co',
-    // anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6b2NidW15ZGdraG56bm9ocnZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwMDkwMTcsImV4cCI6MjA3NjU4NTAxN30.QJqOclKu6fO5TcKHGkTsDcDnl2bFoi0PF-uTDlcknGs',
     publishableKey: 'sb_publishable_fJjqdtTLaB_vN-7qoxYwyQ_vqNCCRkg',
     postgrestOptions: const PostgrestClientOptions(schema: 'ftm_pos'),
   );

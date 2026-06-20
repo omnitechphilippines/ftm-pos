@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../models/product_model.dart';
+import '../../../../utils/formatters.dart';
 import '../../../../widgets/app_bars/custom_app_bar.dart';
 import '../../../../widgets/drawers/side_drawer.dart';
 import '../../../../widgets/loading_indicators/loading_indicator.dart';
@@ -20,9 +22,7 @@ class ProductsView extends GetView<ProductsController> {
       () => Scaffold(
         appBar: CustomAppBar(
           title: 'Products',
-          actions: controller.isLoading.value
-              ? null
-              : <Widget>[IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: () => _showScannerDialog(controller), tooltip: 'Scan Barcode'), IconButton(icon: const Icon(Icons.refresh), onPressed: () => controller.fetchProducts(), tooltip: 'Refresh Products')],
+          actions: controller.isLoading.value ? null : <Widget>[IconButton(icon: const Icon(Icons.qr_code_scanner), onPressed: () => Get.dialog(barrierDismissible: false, const ScannerDialog()).then((_) => controller.disposeScanner()), tooltip: 'Scan Barcode')],
         ),
         drawer: SideDrawer(currentRoute: currentRoute),
         body: controller.isLoading.value
@@ -44,36 +44,35 @@ class ProductsView extends GetView<ProductsController> {
 
                   // Product List
                   Expanded(
-                    child: Obx(() {
-                      if (controller.filteredProducts.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[400]),
-                              const SizedBox(height: 16),
-                              Text('No products found', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
-                            ],
+                    child: controller.filteredProducts.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[400]),
+                                const SizedBox(height: 16),
+                                Text('No products found', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: () => controller.fetchProducts(),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: controller.filteredProducts.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                final ProductModel product = controller.filteredProducts[index];
+                                return _buildProductCard(product);
+                              },
+                            ),
                           ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: controller.filteredProducts.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          final ProductModel product = controller.filteredProducts[index];
-                          return _buildProductCard(product, controller);
-                        },
-                      );
-                    }),
                   ),
                 ],
               ),
         floatingActionButton: controller.isLoading.value
             ? null
             : FloatingActionButton.extended(
-                onPressed: () => _showProductDialog(),
+                onPressed: () => showProductDialog(),
                 icon: const Icon(Icons.add),
                 label: const Text('Add Product', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
@@ -81,95 +80,102 @@ class ProductsView extends GetView<ProductsController> {
     );
   }
 
-  Widget _buildProductCard(ProductModel product, ProductsController controller) {
+  Widget _buildProductCard(ProductModel product) {
     final bool isExpiringSoon = product.expiryDate != null && product.expiryDate!.difference(DateTime.now()).inDays <= 30 && product.expiryDate!.isAfter(DateTime.now());
 
     final bool isExpired = product.expiryDate != null && product.expiryDate!.isBefore(DateTime.now());
 
     final bool isLowStock = product.quantity <= 5;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: InkWell(
-          onTap: () => Get.dialog(Dialog(child: product.image != null ? InteractiveViewer(child: Image.memory(product.image!)) : const Icon(Icons.image_outlined, size: 250))),
-          child: Hero(
-            tag: 'product-img-${product.id}',
-            child: product.image != null ? Image.memory(product.image!, width: 50, height: 50, fit: BoxFit.contain) : const Icon(Icons.image_outlined, size: 50),
-          ),
-        ),
-        title: Text(product.weight!.isNotEmpty ? '${product.name} - ${product.weight}' : product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const SizedBox(height: 4),
-            Text('Code: ${product.code}'),
-            Text('Price: ₱ ${product.sellingPrice.toStringAsFixed(2)}'),
-            Row(
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: InkWell(
+              onTap: () => Get.dialog(Dialog(child: product.image != null ? InteractiveViewer(child: Image.memory(product.image!)) : const Icon(Icons.image_outlined, size: 250))),
+              child: Hero(
+                tag: 'product-img-${product.id}',
+                child: product.image != null ? Image.memory(product.image!, width: 50, height: 50, fit: BoxFit.contain) : const Icon(Icons.image_outlined, size: 50),
+              ),
+            ),
+            title: Text(product.weight!.isNotEmpty ? '${product.name} - ${product.weight}' : product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  'Stock: ${product.quantity}',
-                  style: TextStyle(color: isLowStock ? Colors.red : Colors.green, fontWeight: FontWeight.bold),
+                const SizedBox(height: 4),
+                Text('Code: ${product.code.toString().padLeft(13, '0')}'),
+                Text('Price: ₱ ${numberFormatter.format(product.sellingPrice)}'),
+                Row(
+                  children: <Widget>[
+                    Text(
+                      'Stock: ${product.quantity}',
+                      style: TextStyle(color: isLowStock ? Colors.red : Colors.green, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
+                if (product.expiryDate != null)
+                  Text(
+                    'Expires: ${DateFormat('MMM dd, yyyy').format(product.expiryDate!)}',
+                    style: TextStyle(color: isExpired ? Colors.red : (isExpiringSoon ? Colors.orange : Colors.white38), fontWeight: (isExpired || isExpiringSoon) ? FontWeight.bold : FontWeight.normal),
+                  ),
               ],
             ),
-            if (product.expiryDate != null)
-              Text(
-                'Expires: ${DateFormat('MMM dd, yyyy').format(product.expiryDate!)}',
-                style: TextStyle(color: isExpired ? Colors.red : (isExpiringSoon ? Colors.orange : Colors.white38), fontWeight: (isExpired || isExpiringSoon) ? FontWeight.bold : FontWeight.normal),
-              ),
-          ],
-        ),
-        trailing: PopupMenuButton<String>(
-          itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
-            const PopupMenuItem<String>(
-              value: 'edit',
-              child: Row(
-                children: <Widget>[
-                  Icon(Icons.edit, color: Colors.blue),
-                  SizedBox(width: 8),
-                  Text('Edit'),
-                ],
-              ),
+            trailing: PopupMenuButton<String>(
+              itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
+                const PopupMenuItem<String>(
+                  value: 'edit',
+                  child: Row(
+                    children: <Widget>[
+                      Icon(Icons.edit, color: Colors.blue),
+                      SizedBox(width: 8),
+                      Text('Edit'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: <Widget>[
+                      Icon(Icons.delete, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Delete'),
+                    ],
+                  ),
+                ),
+              ],
+              onSelected: (String value) {
+                if (value == 'edit') {
+                  controller.loadProductToForm(product);
+                  showProductDialog(product: product);
+                } else if (value == 'delete') {
+                  _showDeleteConfirmation(product);
+                }
+              },
             ),
-            const PopupMenuItem<String>(
-              value: 'delete',
-              child: Row(
-                children: <Widget>[
-                  Icon(Icons.delete, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Delete'),
-                ],
-              ),
-            ),
-          ],
-          onSelected: (String value) {
-            if (value == 'edit') {
-              controller.loadProductToForm(product);
-              _showProductDialog(product: product);
-            } else if (value == 'delete') {
-              _showDeleteConfirmation(controller, product);
-            }
-          },
+          ),
         ),
       ),
     );
   }
 
-  void _showProductDialog({ProductModel? product}) {
-    final bool isEditing = product != null;
+  void showProductDialog({ProductModel? product, String? code}) {
+    controller.isEditingForm.value = product != null;
+    controller.codeController.text = code ?? product?.code.toString() ?? '';
 
     Get.dialog(
       barrierDismissible: false,
       Builder(
         builder: (BuildContext context) {
+          // final ResponsiveService responsive = Get.find<ResponsiveService>();
           return Dialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Container(
-              width: Get.size.width * 0.9,
+              // width: responsive.screenWidth(context) * 0.9,
               constraints: const BoxConstraints(maxWidth: 600),
               padding: const EdgeInsets.all(24),
               child: SingleChildScrollView(
@@ -180,12 +186,12 @@ class ProductsView extends GetView<ProductsController> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Text(isEditing ? 'Edit Product' : 'Add New Product', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        Obx(() => Text(controller.isEditingForm.value ? 'Edit Product' : 'Add New Product', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
                         IconButton(
                           icon: const Icon(Icons.close),
                           onPressed: () {
-                            controller.clearForm();
                             Get.back();
+                            controller.clearForm();
                           },
                         ),
                       ],
@@ -196,26 +202,36 @@ class ProductsView extends GetView<ProductsController> {
                     Row(
                       children: <Widget>[
                         Expanded(
-                          child: TextField(
-                            controller: controller.codeController,
-                            decoration: InputDecoration(
-                              labelText: 'Product Code *',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                              prefixIcon: const Icon(Icons.qr_code),
+                          child: Obx(
+                            () => TextField(
+                              controller: controller.codeController,
+                              inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+                              readOnly: controller.isEditingForm.value || code != null ? true : false,
+                              decoration: InputDecoration(
+                                labelText: 'Product Code *',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                prefixIcon: const Icon(Icons.qr_code),
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         IconButton(
-                          icon: const Icon(Icons.qr_code_scanner, color: Colors.blue),
-                          onPressed: () {
-                            _showScannerDialog(
-                              controller,
-                              onScanned: (String code) {
-                                controller.codeController.text = code;
-                              },
-                            );
-                          },
+                          icon: Icon(Icons.qr_code_scanner, color: controller.isEditingForm.value || code != null ? null : Colors.blue),
+                          onPressed: controller.isEditingForm.value || code != null
+                              ? null
+                              : () async {
+                                  final dynamic product = await Get.dialog(ScannerDialog(onScanned: (String code) => controller.codeController.text = code));
+                                  if (product is ProductModel) {
+                                    controller.isEditingForm.value = true;
+                                    controller.loadProductToForm(product);
+                                  } else if (product is String) {
+                                    controller.clearForm();
+                                    controller.codeController.text = product;
+                                    controller.isEditingForm.value = false;
+                                  }
+                                  controller.disposeScanner();
+                                },
                           tooltip: 'Scan Barcode',
                         ),
                       ],
@@ -376,8 +392,8 @@ class ProductsView extends GetView<ProductsController> {
                             onPressed: controller.isLoading.value
                                 ? null
                                 : () {
-                                    if (isEditing) {
-                                      controller.updateProduct(product.id);
+                                    if (controller.isEditingForm.value) {
+                                      controller.updateProduct(product!.id);
                                     } else {
                                       controller.createProduct();
                                     }
@@ -387,7 +403,7 @@ class ProductsView extends GetView<ProductsController> {
                               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
-                            child: controller.isLoading.value ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(isEditing ? 'Update Product' : 'Add Product'),
+                            child: controller.isLoading.value ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(controller.isEditingForm.value ? 'Update Product' : 'Add Product'),
                           ),
                         ],
                       ),
@@ -402,7 +418,7 @@ class ProductsView extends GetView<ProductsController> {
     );
   }
 
-  void _showDeleteConfirmation(ProductsController controller, ProductModel product) {
+  void _showDeleteConfirmation(ProductModel product) {
     Get.dialog(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -422,70 +438,72 @@ class ProductsView extends GetView<ProductsController> {
       ),
     );
   }
+}
 
-  void _showScannerDialog(ProductsController controller, {Function(String)? onScanned}) {
+class ScannerDialog extends StatelessWidget {
+  final Function(String)? onScanned;
+  const ScannerDialog({super.key, this.onScanned});
+
+  @override
+  Widget build(BuildContext context) {
+    final ProductsController controller = Get.find<ProductsController>();
     controller.initializeScanner();
-
-    Get.dialog(
-      barrierDismissible: false,
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          height: 400,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: <Widget>[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  const Text('Scan Barcode', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        height: 400,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                const Text('Scan Barcode', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    controller.disposeScanner();
+                    Get.back();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: MobileScanner(
+                  controller: controller.scannerController,
+                  onDetect: (BarcodeCapture capture) async {
+                    final List<Barcode> barcodes = capture.barcodes;
+                    if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
+                      final String code = barcodes.first.rawValue!;
                       controller.disposeScanner();
-                      Get.back();
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: MobileScanner(
-                    controller: controller.scannerController,
-                    onDetect: (BarcodeCapture capture) async {
-                      final List<Barcode> barcodes = capture.barcodes;
-                      if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
-                        final String code = barcodes.first.rawValue!;
-                        controller.disposeScanner();
-                        Get.back();
 
-                        if (onScanned != null) {
-                          onScanned(code);
+                      // Search for existing product
+                      final ProductModel? product = controller.searchProductByCode(int.parse(code));
+                      Get.back(result: product ?? code);
+                      controller.searchQuery.value = code;
+                      controller.searchInputController.text = code;
+                      controller.filterProducts();
+                      if (onScanned == null) {
+                        if (product != null) {
+                          controller.loadProductToForm(product);
+                          const ProductsView().showProductDialog(product: product);
                         } else {
-                          // Search for existing product
-                          final ProductModel? product = await controller.searchProductByCode(code);
-                          if (product != null) {
-                            controller.loadProductToForm(product);
-                            _showProductDialog(product: product);
-                          } else {
-                            // Create new product with scanned code
-                            controller.codeController.text = code;
-                            _showProductDialog();
-                          }
+                          const ProductsView().showProductDialog(code: code);
                         }
                       }
-                    },
-                  ),
+                    }
+                  },
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text('Position the barcode within the frame', style: TextStyle(color: Colors.grey)),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Position the barcode within the frame', style: TextStyle(color: Colors.grey)),
+          ],
         ),
       ),
-    ).then((_) => controller.disposeScanner());
+    );
   }
 }

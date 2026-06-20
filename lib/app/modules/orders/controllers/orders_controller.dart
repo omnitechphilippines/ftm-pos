@@ -60,14 +60,14 @@ class OrdersController extends GetxController {
   }
 
   /// Search product by barcode
-  ProductModel? searchProductByCode(int code) => products.firstWhere((ProductModel product) => product.code == code);
+  ProductModel? searchProductByCode(int code) => products.firstWhereOrNull((ProductModel product) => product.code == code);
 
   /// Filter products based on search query
   void filterProducts() {
     if (searchQuery.value.isEmpty) {
       filteredProducts.value = .from(products);
     } else {
-      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code == int.tryParse(searchQuery.value)).toList();
+      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.toString().contains(searchQuery.value)).toList();
     }
   }
 
@@ -124,22 +124,30 @@ class OrdersController extends GetxController {
   }
 
   void incrementCart(ProductModel product, int orderedProductsCount) {
-    cart.value++;
-    orderedProductsCount++;
-    if (orderedProductsCount == 1) {
-      orderedProducts.add(product.copyWith(quantity: 1));
+    if (orderedProductsCount < product.quantity) {
+      cart.value++;
+      orderedProductsCount++;
+      if (orderedProductsCount == 1) {
+        // new product added to cart
+        orderedProducts.add(product.copyWith(quantity: 1));
+      } else {
+        // increment quantity if not exceed stock
+        orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.code == product.code)] = product.copyWith(quantity: orderedProductsCount);
+      }
     } else {
-      orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.code == product.code)] = product.copyWith(quantity: orderedProductsCount);
+      Get.snackbar('', 'Cannot add more than ${product.quantity} of ${product.name}', colorText: Colors.black, snackPosition: .BOTTOM, backgroundColor: Colors.white, borderRadius: 0, titleText: const SizedBox.shrink());
     }
   }
 
   void decrementCart(ProductModel product, int orderedProductsCount) {
     cart.value--;
     orderedProductsCount--;
-    if (orderedProductsCount == 0) {
-      orderedProducts.removeAt(orderedProducts.indexWhere((ProductModel p) => p.code == product.code));
-    } else {
+    if (orderedProductsCount > 0) {
+      // decrement quantity until it reaches 0
       orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.code == product.code)] = product.copyWith(quantity: orderedProductsCount);
+    } else {
+      // remove product from cart if quantity is 0
+      orderedProducts.removeAt(orderedProducts.indexWhere((ProductModel p) => p.code == product.code));
     }
   }
 
@@ -173,15 +181,7 @@ class OrdersController extends GetxController {
     );
 
     if (cartItems == null || cartItems!.name.isEmpty) {
-      Get.snackbar(
-        '',
-        '',
-        snackPosition: .BOTTOM,
-        backgroundColor: Colors.white,
-        borderRadius: 0,
-        titleText: const SizedBox.shrink(),
-        messageText: const Text('Your cart is empty!', style: TextStyle(color: Colors.black)),
-      );
+      Get.snackbar('', 'Your cart is empty!', colorText: Colors.black, snackPosition: .BOTTOM, backgroundColor: Colors.white, borderRadius: 0, titleText: const SizedBox.shrink());
       return;
     }
 

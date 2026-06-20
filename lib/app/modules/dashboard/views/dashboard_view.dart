@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../../models/order_model.dart';
 import '../../../../services/responsive_service.dart';
 import '../../../../themes/app_theme.dart';
+import '../../../../utils/formatters.dart';
 import '../../../../widgets/app_bars/custom_app_bar.dart';
 import '../../../../widgets/cards/clickable_metric_card.dart';
 import '../../../../widgets/drawers/side_drawer.dart';
@@ -64,7 +65,7 @@ class VerticalMetricsCards extends StatelessWidget {
     final DashboardController controller = Get.find<DashboardController>();
     return Column(
       children: <Widget>[
-        ClickableMetricCard(title: 'Gross Revenue', value: '₱${controller.totalRevenue.value.toStringAsFixed(2)}', icon: Icons.payments, color: AppColors.success, onTap: () => Get.dialog(const RevenueDetailsDialog())),
+        ClickableMetricCard(title: 'Gross Revenue', value: '₱${numberFormatter.format(controller.totalRevenue.value)}', icon: Icons.payments, color: AppColors.success, onTap: () => Get.dialog(const RevenueDetailsDialog())),
         const SizedBox(height: 12),
         ClickableMetricCard(title: 'Total Invoices', value: '${controller.totalOrders.value}', icon: Icons.receipt, color: AppColors.info, onTap: () => Get.dialog(const InvoicesSummaryDialog())),
         const SizedBox(height: 12),
@@ -91,7 +92,7 @@ class HorizontalMetricsCards extends StatelessWidget {
     return Row(
       children: <Widget>[
         Expanded(
-          child: ClickableMetricCard(title: 'Gross Revenue', value: '₱${controller.totalRevenue.value.toStringAsFixed(2)}', icon: Icons.payments, color: AppColors.success, onTap: () => Get.dialog(const RevenueDetailsDialog())),
+          child: ClickableMetricCard(title: 'Gross Revenue', value: '₱${numberFormatter.format(controller.totalRevenue.value)}', icon: Icons.payments, color: AppColors.success, onTap: () => Get.dialog(const RevenueDetailsDialog())),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -162,9 +163,9 @@ class TopProductsCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: Text('${item['total_qty_sold']} units sold', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                      subtitle: Text('${item['total_qty_sold']} unit${item['total_qty_sold'] > 1 ? 's' : ''} sold', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                       trailing: Text(
-                        '₱${(item['total_revenue_generated'] as num).toStringAsFixed(2)}',
+                        '₱${numberFormatter.format(item['total_revenue_generated'])}',
                         style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
                       ),
                     );
@@ -222,7 +223,7 @@ class RecentOrdersCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      trailing: Text('₱${order.total.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      trailing: Text('₱${numberFormatter.format(order.total)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                       onTap: () => Get.dialog(SingleReceiptDetailDialog(order: order)),
                     );
                   },
@@ -250,7 +251,7 @@ class RevenueDetailsDialog extends StatelessWidget {
           const Text('Total Net Lifetime Sales Accumulation Summary:', style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 16),
           Text(
-            '₱${controller.totalRevenue.value.toStringAsFixed(2)}',
+            '₱${numberFormatter.format(controller.totalRevenue.value)}',
             style: const TextStyle(color: Colors.green, fontSize: 32, fontWeight: FontWeight.bold),
           ),
         ],
@@ -352,7 +353,7 @@ class ExpiryDetailsDialog extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: Text('Code: ${item['code']} • Stock Remaining: ${item['quantity']}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                      subtitle: Text('Code: ${item['code'].toString().padLeft(13, '0')} • Stock Remaining: ${item['quantity']}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
                       trailing: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -401,9 +402,9 @@ class FullLeaderboardDialog extends StatelessWidget {
             return ListTile(
               leading: Text('${index + 1}.', style: const TextStyle(color: Colors.grey)),
               title: Text(item['p_name'] ?? 'Unknown'),
-              subtitle: Text('${item['total_qty_sold']} units sold', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+              subtitle: Text('${item['total_qty_sold']} unit${item['total_qty_sold'] > 1 ? 's' : ''} sold', style: const TextStyle(color: Colors.grey, fontSize: 11)),
               trailing: Text(
-                '₱${(item['total_revenue_generated'] as num).toStringAsFixed(2)}',
+                '₱${numberFormatter.format(item['total_revenue_generated'])}',
                 style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
               ),
             );
@@ -439,7 +440,7 @@ class AllRecentInvoicesDialog extends StatelessWidget {
               title: Text('ID: #${order.id.substring(0, 8).toUpperCase()}'),
               subtitle: Text('Date: ${order.orderAt.toString().substring(0, 16)}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
               trailing: Text(
-                '₱${order.total.toStringAsFixed(2)}',
+                '₱${numberFormatter.format(order.total)}',
                 style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
               ),
               onTap: () => Get.dialog(SingleReceiptDetailDialog(order: order)),
@@ -497,7 +498,7 @@ class SingleReceiptDetailDialog extends StatelessWidget {
               children: <Widget>[
                 const Text('Total Paid Amount:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 Text(
-                  '₱${order.total.toStringAsFixed(2)}',
+                  '₱${numberFormatter.format(order.total)}',
                   style: const TextStyle(color: Colors.green, fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -564,7 +565,7 @@ class FullInvoiceTable extends StatelessWidget {
           DataCell(Text('x${order.quantity[idx]}', style: const TextStyle(fontSize: 13))),
           DataCell(
             Text(
-              '₱${order.amount[idx].toStringAsFixed(2)}',
+              '₱${numberFormatter.format(order.amount[idx])}',
               style: const TextStyle(color: Colors.green, fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ),

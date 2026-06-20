@@ -26,23 +26,10 @@ class ProductModel {
     quantity: json['quantity'] ?? 0,
     weight: json['weight'] ?? '',
     expiryDate: DateTime.tryParse(json['expiry_date'] ?? '')?.toLocal(),
-    // image: Uint8List.fromList(jsonDecode(utf8.decode(_hexToUint8List(json['image'].substring(2)))).cast<int>()),
     image: json['image'] != null && json['image'].toString().length > 2 ? Uint8List.fromList(jsonDecode(utf8.decode(HEX.decode(json['image'].substring(2)))).cast<int>()) : null,
     createdAt: DateTime.parse(json['created_at'] ?? '').toLocal(),
     updatedAt: DateTime.parse(json['updated_at'] ?? '').toLocal(),
   );
-
-  // static Uint8List _hexToUint8List(String hex) {
-  //   if (hex.length % 2 != 0) {
-  //     throw 'Invalid hex string';
-  //   }
-  //   final Uint8List bytes = Uint8List(hex.length ~/ 2);
-  //   for (int i = 0; i < bytes.length; i++) {
-  //     final String char = hex.substring(i * 2, i * 2 + 2);
-  //     bytes[i] = int.parse(char, radix: 16);
-  //   }
-  //   return bytes;
-  // }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
@@ -53,7 +40,6 @@ class ProductModel {
     'quantity': quantity,
     'weight': weight,
     'expiry_date': expiryDate?.toUtc().toIso8601String(),
-    // 'image': image,
     'image': image != null ? '\\x${HEX.encode(image!)}' : null,
     'created_at': createdAt.toUtc().toIso8601String(),
     'updated_at': updatedAt.toUtc().toIso8601String(),
