@@ -32810,7 +32810,7 @@ $S:2}
 A.aMU.prototype={
 $1(a){var s=A.e8().b
 s=s==null?null:s.canvasKitBaseUrl
-return(s==null?"https://www.gstatic.com/flutter-canvaskit/c416acfeb8126e097f758c664aaa3da929e27da0/":s)+a},
+return(s==null?"https://www.gstatic.com/flutter-canvaskit/a4ce257c68517c1410f4b48ac9852ab5642a3f8d/":s)+a},
 $S:44}
 A.Tg.prototype={
 gA(a){var s=this.a
