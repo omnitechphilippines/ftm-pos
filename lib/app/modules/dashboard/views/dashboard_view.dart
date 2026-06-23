@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
-import '../../../../models/order_model.dart';
-import '../../../../services/responsive_service.dart';
-import '../../../../themes/app_theme.dart';
-import '../../../../utils/formatters.dart';
-import '../../../../widgets/app_bars/custom_app_bar.dart';
-import '../../../../widgets/cards/clickable_metric_card.dart';
-import '../../../../widgets/drawers/side_drawer.dart';
-import '../../../../widgets/loading_indicators/loading_indicator.dart';
+import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/app_bars/custom_app_bar.dart';
+import '../../../../core/widgets/cards/clickable_metric_card.dart';
+import '../../../../core/widgets/drawers/side_drawer.dart';
+import '../../../../core/widgets/loading_indicators/loading_indicator.dart';
+import '../../../data/models/order_model.dart';
 import '../controllers/dashboard_controller.dart';
 
 class DashboardView extends GetView<DashboardController> {
@@ -18,7 +18,6 @@ class DashboardView extends GetView<DashboardController> {
   @override
   Widget build(BuildContext context) {
     final String currentRoute = Get.currentRoute.isNotEmpty ? Get.currentRoute : (Get.routing.current.isNotEmpty ? Get.routing.current : ModalRoute.of(context)?.settings.name ?? '');
-    final ResponsiveService responsive = Get.find<ResponsiveService>();
 
     return Scaffold(
       appBar: const CustomAppBar(title: 'Dashboard'),
@@ -29,16 +28,16 @@ class DashboardView extends GetView<DashboardController> {
             : RefreshIndicator(
                 onRefresh: () => controller.refreshDashboard(),
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(responsive.isMobile(context) ? 12 : 16),
+                  padding: EdgeInsets.all(context.isMobile ? 12 : 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       // SECTION 1: Clickable KPI Summary Metric Cards Grid
-                      responsive.isMobile(context) ? const VerticalMetricsCards() : const HorizontalMetricsCards(),
-                      SizedBox(height: responsive.isMobile(context) ? 16 : 24),
+                      context.isMobile ? const VerticalMetricsCards() : const HorizontalMetricsCards(),
+                      SizedBox(height: context.isMobile ? 16 : 24),
 
                       // SECTION 2: Data Insights Splitting Layout
-                      if (responsive.isMobile(context)) ...<Widget>[const TopProductsCard(), const SizedBox(height: 16), const RecentOrdersCard()] else ...<Widget>[
+                      if (context.isMobile) ...<Widget>[const TopProductsCard(), const SizedBox(height: 16), const RecentOrdersCard()] else ...<Widget>[
                         const Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[

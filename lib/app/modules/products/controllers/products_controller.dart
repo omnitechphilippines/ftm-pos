@@ -7,7 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../models/product_model.dart';
+import '../../../data/models/product_model.dart';
 
 class ProductsController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -114,52 +114,6 @@ class ProductsController extends GetxController {
     }
   }
 
-  /// Show image picker options
-  void showImagePickerOptions() {
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Get.isDarkMode ? const Color(0xFF2C2C3D) : Colors.white,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Text('Select Image Source', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.camera_alt, color: Colors.blue),
-              title: const Text('Camera'),
-              onTap: () {
-                Get.back();
-                pickImageFromCamera();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library, color: Colors.blue),
-              title: const Text('Gallery'),
-              onTap: () {
-                Get.back();
-                pickImageFromGallery();
-              },
-            ),
-            if (selectedImage.value != null)
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Remove Image'),
-                onTap: () {
-                  Get.back();
-                  selectedImage.value = null;
-                  Get.snackbar('Success', 'Image removed', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white, borderRadius: 0);
-                },
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// Create a new product
   Future<void> createProduct() async {
     if (!_validateForm()) {
@@ -230,6 +184,7 @@ class ProductsController extends GetxController {
       final int index = products.indexWhere((ProductModel p) => p.id == productId);
       if (index != -1) {
         products[index] = updatedProduct;
+        products.insert(0, products.removeAt(index));
         filterProducts();
       }
 
@@ -290,39 +245,40 @@ class ProductsController extends GetxController {
     weightController.clear();
     expiryDate.value = null;
     selectedImage.value = null;
+    errorMessage.value = '';
   }
 
   // Validate form
   bool _validateForm() {
     if (codeController.text.trim().isEmpty && codeController.text.trim().length != 13) {
       Get.snackbar('Error', 'Product code is required and have 13 digits', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
+      errorMessage.value = 'Product code is required and have 13 digits';
       return false;
     }
 
     if (nameController.text.trim().isEmpty) {
       Get.snackbar('Error', 'Product name is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
+      errorMessage.value = 'Product name is required';
       return false;
     }
 
     if (sellingPriceController.text.trim().isEmpty || double.tryParse(sellingPriceController.text) == null) {
       Get.snackbar('Error', 'Valid selling price is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
+      errorMessage.value = 'Valid selling price is required';
       return false;
     }
 
     if (originalPriceController.text.trim().isEmpty || double.tryParse(originalPriceController.text) == null) {
       Get.snackbar('Error', 'Valid original price is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
+      errorMessage.value = 'Valid original price is required';
       return false;
     }
 
     if (quantityController.text.trim().isEmpty || int.tryParse(quantityController.text) == null) {
       Get.snackbar('Error', 'Valid quantity is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
+      errorMessage.value = 'Valid quantity is required';
       return false;
     }
-
-    // if (selectedImage.value == null) {
-    //   Get.snackbar('Error', 'Image is required', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white, borderRadius: 0);
-    //   return false;
-    // }
 
     return true;
   }

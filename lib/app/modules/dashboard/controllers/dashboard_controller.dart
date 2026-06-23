@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../models/order_model.dart';
+import '../../../data/models/order_model.dart';
 
 class DashboardController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;

@@ -5,12 +5,13 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import '../../../../models/product_model.dart';
-import '../../../../utils/formatters.dart';
-import '../../../../widgets/app_bars/custom_app_bar.dart';
-import '../../../../widgets/drawers/side_drawer.dart';
-import '../../../../widgets/loading_indicators/loading_indicator.dart';
-import '../../../../widgets/search_bars/custom_search_bar.dart';
+import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/app_bars/custom_app_bar.dart';
+import '../../../../core/widgets/drawers/side_drawer.dart';
+import '../../../../core/widgets/loading_indicators/loading_indicator.dart';
+import '../../../../core/widgets/search_bars/custom_search_bar.dart';
+import '../../../data/models/product_model.dart';
 import '../controllers/products_controller.dart';
 
 class ProductsView extends GetView<ProductsController> {
@@ -171,7 +172,6 @@ class ProductsView extends GetView<ProductsController> {
       barrierDismissible: false,
       Builder(
         builder: (BuildContext context) {
-          // final ResponsiveService responsive = Get.find<ResponsiveService>();
           return Dialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Container(
@@ -211,6 +211,7 @@ class ProductsView extends GetView<ProductsController> {
                                 labelText: 'Product Code *',
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                                 prefixIcon: const Icon(Icons.qr_code),
+                                errorText: controller.errorMessage.value.isNotEmpty && controller.codeController.text.isEmpty ? 'Required' : null,
                               ),
                             ),
                           ),
@@ -245,6 +246,7 @@ class ProductsView extends GetView<ProductsController> {
                         labelText: 'Product Name *',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                         prefixIcon: const Icon(Icons.inventory_2),
+                        errorText: controller.errorMessage.value.isNotEmpty && controller.nameController.text.isEmpty ? 'Required' : null,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -255,11 +257,14 @@ class ProductsView extends GetView<ProductsController> {
                         Expanded(
                           child: TextField(
                             controller: controller.originalPriceController,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: <TextInputFormatter>[CurrencyFormatter()],
                             decoration: InputDecoration(
                               labelText: 'Original Price *',
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                               prefixIcon: const Text('₱', style: TextStyle(fontSize: 24), textAlign: .center),
+                              prefixText: ' ₱ ',
+                              errorText: controller.errorMessage.value.isNotEmpty && controller.originalPriceController.text.isEmpty ? 'Required' : null,
                             ),
                           ),
                         ),
@@ -267,11 +272,14 @@ class ProductsView extends GetView<ProductsController> {
                         Expanded(
                           child: TextField(
                             controller: controller.sellingPriceController,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: <TextInputFormatter>[CurrencyFormatter()],
                             decoration: InputDecoration(
                               labelText: 'Selling Price *',
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                               prefixIcon: const Icon(Icons.sell),
+                              prefixText: ' ₱ ',
+                              errorText: controller.errorMessage.value.isNotEmpty && controller.sellingPriceController.text.isEmpty ? 'Required' : null,
                             ),
                           ),
                         ),
@@ -287,6 +295,7 @@ class ProductsView extends GetView<ProductsController> {
                         labelText: 'Quantity *',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                         prefixIcon: const Icon(Icons.numbers),
+                        errorText: controller.errorMessage.value.isNotEmpty && controller.quantityController.text.isEmpty ? 'Required' : null,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -329,11 +338,11 @@ class ProductsView extends GetView<ProductsController> {
                       () => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          const Text('Product Image', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                          const Text('Product Image (Optional)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                           const SizedBox(height: 8),
                           if (controller.selectedImage.value != null)
                             InkWell(
-                              onTap: () => controller.showImagePickerOptions(),
+                              onTap: () => Get.bottomSheet(const ImagePickerOptions()),
                               child: Container(
                                 width: double.infinity,
                                 height: 200,
@@ -349,7 +358,7 @@ class ProductsView extends GetView<ProductsController> {
                             )
                           else
                             InkWell(
-                              onTap: () => controller.showImagePickerOptions(),
+                              onTap: () => Get.bottomSheet(const ImagePickerOptions()),
                               child: Container(
                                 width: double.infinity,
                                 height: 150,
@@ -501,6 +510,57 @@ class ScannerDialog extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text('Position the barcode within the frame', style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Show image picker options
+class ImagePickerOptions extends StatelessWidget {
+  const ImagePickerOptions({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final ProductsController controller = Get.find<ProductsController>();
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: context.isDarkMode ? const Color(0xFF2C2C3D) : Colors.white,
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+      ),
+      child: Material(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Text('Select Image Source', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: Colors.blue),
+              title: const Text('Camera'),
+              onTap: () {
+                Get.back();
+                controller.pickImageFromCamera();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: Colors.blue),
+              title: const Text('Gallery'),
+              onTap: () {
+                Get.back();
+                controller.pickImageFromGallery();
+              },
+            ),
+            if (controller.selectedImage.value != null)
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('Remove Image'),
+                onTap: () {
+                  Get.back();
+                  controller.selectedImage.value = null;
+                  Get.snackbar('Success', 'Image removed', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white, borderRadius: 0);
+                },
+              ),
           ],
         ),
       ),

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../services/responsive_service.dart';
-import '../../../../themes/app_theme.dart';
-import '../../../../widgets/text_form_fields/custom_text_form_field.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/text_form_fields/custom_text_form_field.dart';
 import '../controllers/login_controller.dart';
 
 class LoginView extends GetView<LoginController> {
@@ -53,7 +52,6 @@ class LoginCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ResponsiveService responsive = Get.find<ResponsiveService>();
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       elevation: 2,
@@ -75,7 +73,7 @@ class LoginCard extends StatelessWidget {
                 hintText: 'Email',
                 hintColor: const Color(0xFF8D8D90),
                 enabledBorderColor: const Color(0xFF636571),
-                focusedBorderColor: responsive.isDarkMode(context) ? Colors.white70 : Colors.black,
+                focusedBorderColor: context.isDarkMode ? Colors.white70 : Colors.black,
                 errorBorderColor: Colors.red.shade900,
                 focusedErrorBorderColor: Colors.redAccent,
                 validator: (String? value) {
@@ -97,7 +95,7 @@ class LoginCard extends StatelessWidget {
                   hintText: 'Password',
                   hintColor: const Color(0xFF8D8D90),
                   enabledBorderColor: const Color(0xFF636571),
-                  focusedBorderColor: responsive.isDarkMode(context) ? Colors.white70 : Colors.black,
+                  focusedBorderColor: context.isDarkMode ? Colors.white70 : Colors.black,
                   errorBorderColor: Colors.red.shade900,
                   focusedErrorBorderColor: Colors.redAccent,
                   validator: (String? value) => value == null || value.isEmpty

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../app/routes/app_pages.dart';
-import '../../services/auth_service.dart';
+import '../../../app/data/services/auth_service.dart';
+import '../../../app/routes/app_pages.dart';
 
 class SideDrawer extends StatelessWidget {
   final String currentRoute;

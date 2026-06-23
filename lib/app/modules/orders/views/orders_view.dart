@@ -5,15 +5,15 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import '../../../../models/order_model.dart';
-import '../../../../models/product_model.dart';
-import '../../../../services/responsive_service.dart';
-import '../../../../themes/app_theme.dart';
-import '../../../../utils/formatters.dart';
-import '../../../../widgets/app_bars/custom_app_bar.dart';
-import '../../../../widgets/drawers/side_drawer.dart';
-import '../../../../widgets/loading_indicators/loading_indicator.dart';
-import '../../../../widgets/search_bars/custom_search_bar.dart';
+import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/app_bars/custom_app_bar.dart';
+import '../../../../core/widgets/drawers/side_drawer.dart';
+import '../../../../core/widgets/loading_indicators/loading_indicator.dart';
+import '../../../../core/widgets/search_bars/custom_search_bar.dart';
+import '../../../data/models/order_model.dart';
+import '../../../data/models/product_model.dart';
 import '../controllers/orders_controller.dart';
 
 class OrdersView extends GetView<OrdersController> {
@@ -121,16 +121,14 @@ class OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final OrdersController controller = Get.find<OrdersController>();
-    final ResponsiveService responsive = Get.find<ResponsiveService>();
-    final bool isMobile = responsive.isMobile(context);
 
     final bool isExpiringSoon = product.expiryDate != null && product.expiryDate!.difference(DateTime.now()).inDays <= 30 && product.expiryDate!.isAfter(DateTime.now());
     final bool isExpired = product.expiryDate != null && product.expiryDate!.isBefore(DateTime.now());
     final bool isLowStock = product.quantity <= 5;
 
-    final double cardMargin = isMobile ? 8.0 : 16.0;
-    final double actionButtonSize = isMobile ? 28.0 : 32.0;
-    final double actionIconSize = isMobile ? 14.0 : 18.0;
+    final double cardMargin = context.isMobile ? 8.0 : 16.0;
+    final double actionButtonSize = context.isMobile ? 28.0 : 32.0;
+    final double actionIconSize = context.isMobile ? 14.0 : 18.0;
 
     return Obx(() {
       final int currentOrderedQty = controller.orderedProduct(product)?.quantity ?? 0;
@@ -247,8 +245,8 @@ class OrderCard extends StatelessWidget {
           // Cart count indicator badge
           if (currentOrderedQty > 0)
             Positioned(
-              right: isMobile ? 4 : 10,
-              top: isMobile ? 4 : 10,
+              right: context.isMobile ? 4 : 10,
+              top: context.isMobile ? 4 : 10,
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
@@ -336,7 +334,6 @@ class OrderReceiptDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ResponsiveService responsive = Get.find<ResponsiveService>();
     final OrdersController controller = Get.find<OrdersController>();
     return AlertDialog(
       title: Row(
@@ -355,7 +352,7 @@ class OrderReceiptDialog extends StatelessWidget {
       ),
       content: IntrinsicWidth(
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: responsive.screenWidth(context) * 0.9),
+          constraints: BoxConstraints(maxWidth: context.width * 0.9),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -398,7 +395,7 @@ class OrderReceiptDialog extends StatelessWidget {
                           DataCell(Text((index + 1).toString())),
                           DataCell(
                             Container(
-                              constraints: BoxConstraints(maxWidth: responsive.screenWidth(context) * 0.35),
+                              constraints: BoxConstraints(maxWidth: context.width * 0.35),
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               child: Text(order.name[index], softWrap: true),
                             ),
@@ -447,11 +444,10 @@ class ProductDialog extends StatelessWidget {
   const ProductDialog({super.key, required this.product});
   @override
   Widget build(BuildContext context) {
-    final ResponsiveService responsive = Get.find<ResponsiveService>();
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        width: responsive.screenWidth(context) * 0.9,
+        width: context.width * 0.9,
         constraints: const BoxConstraints(maxWidth: 600),
         padding: const EdgeInsets.all(24),
         child: SingleChildScrollView(

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../models/order_model.dart';
-import '../../../../widgets/app_bars/custom_app_bar.dart';
-import '../../../../widgets/drawers/side_drawer.dart';
-import '../../../../widgets/loading_indicators/loading_indicator.dart';
+import '../../../../core/widgets/app_bars/custom_app_bar.dart';
+import '../../../../core/widgets/drawers/side_drawer.dart';
+import '../../../../core/widgets/loading_indicators/loading_indicator.dart';
+import '../../../data/models/order_model.dart';
 import '../controllers/reports_controller.dart';
 
 class ReportsView extends GetView<ReportsController> {

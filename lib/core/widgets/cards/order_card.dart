@@ -3,8 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../app/modules/orders/controllers/orders_controller.dart';
-import '../../models/product_model.dart';
+import '../../../app/data/models/product_model.dart';
+import '../../../app/modules/orders/controllers/orders_controller.dart';
 
 class OrderCard extends StatelessWidget {
   final ProductModel product;

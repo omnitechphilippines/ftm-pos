@@ -4,8 +4,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../models/order_model.dart';
-import '../../../../models/product_model.dart';
+import '../../../data/models/order_model.dart';
+import '../../../data/models/product_model.dart';
 import '../views/orders_view.dart';
 
 class OrdersController extends GetxController {

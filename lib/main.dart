@@ -3,12 +3,11 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'app/data/services/auth_service.dart';
 import 'app/modules/not_found/bindings/not_found_binding.dart';
 import 'app/modules/not_found/views/not_found_view.dart';
 import 'app/routes/app_pages.dart';
-import 'services/auth_service.dart';
-import 'services/responsive_service.dart';
-import 'themes/app_theme.dart';
+import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,12 +18,11 @@ void main() async {
     postgrestOptions: const PostgrestClientOptions(schema: 'ftm_pos'),
   );
   Get.put(AuthService());
-  Get.put(ResponsiveService());
   runApp(
     GetMaterialApp(
       title: 'Point of Sale',
-      theme: lightTheme,
-      darkTheme: darkTheme,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
       initialRoute: AppPages.INITIAL,

@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'dart:convert';
 import 'package:hex/hex.dart';
 
 class ProductModel {
@@ -26,7 +25,7 @@ class ProductModel {
     quantity: json['quantity'] ?? 0,
     weight: json['weight'] ?? '',
     expiryDate: DateTime.tryParse(json['expiry_date'] ?? '')?.toLocal(),
-    image: json['image'] != null && json['image'].toString().length > 2 ? Uint8List.fromList(jsonDecode(utf8.decode(HEX.decode(json['image'].substring(2)))).cast<int>()) : null,
+    image: json['image'] != null && json['image'].toString().length > 2 ? Uint8List.fromList(HEX.decode(json['image'].substring(2))) : null,
     createdAt: DateTime.parse(json['created_at'] ?? '').toLocal(),
     updatedAt: DateTime.parse(json['updated_at'] ?? '').toLocal(),
   );

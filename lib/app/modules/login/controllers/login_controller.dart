@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../../../../models/auth_model.dart';
-import '../../../../services/auth_service.dart';
-import '../../../../widgets/loading_indicators/loading_indicator.dart';
+import '../../../../core/widgets/loading_indicators/loading_indicator.dart';
+import '../../../data/models/auth_model.dart';
+import '../../../data/services/auth_service.dart';
 import '../../../routes/app_pages.dart';
 
 class LoginController extends GetxController {
