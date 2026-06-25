@@ -306,7 +306,7 @@ class ScannerDialog extends StatelessWidget {
                       controller.disposeScanner();
 
                       // Search for existing product
-                      final ProductModel? product = controller.searchProductByCode(int.parse(code));
+                      final ProductModel? product = controller.searchProductByCode(code);
                       controller.searchQuery.value = code;
                       controller.searchInputController.text = code;
                       controller.filterProducts();
@@ -467,7 +467,7 @@ class ProductDialog extends StatelessWidget {
               // Product Code with Scanner
               TextField(
                 readOnly: true,
-                controller: TextEditingController(text: product.code.toString().padLeft(13, '0')),
+                controller: TextEditingController(text: product.code),
                 decoration: InputDecoration(
                   labelText: 'Product Code *',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

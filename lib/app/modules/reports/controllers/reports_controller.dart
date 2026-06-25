@@ -86,7 +86,5 @@ class ReportsController extends GetxController {
   }
 
   // Select a specific receipt to view item tables (Drill Down Level 2)
-  void selectSpecificOrder(OrderModel order) {
-    selectedDetailedOrder.value = order;
-  }
+  void selectSpecificOrder(OrderModel order) => selectedDetailedOrder.value = order;
 }

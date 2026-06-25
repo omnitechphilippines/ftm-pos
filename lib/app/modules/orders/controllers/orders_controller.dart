@@ -60,14 +60,14 @@ class OrdersController extends GetxController {
   }
 
   /// Search product by barcode
-  ProductModel? searchProductByCode(int code) => products.firstWhereOrNull((ProductModel product) => product.code == code);
+  ProductModel? searchProductByCode(String code) => products.firstWhereOrNull((ProductModel product) => product.code == code);
 
   /// Filter products based on search query
   void filterProducts() {
     if (searchQuery.value.isEmpty) {
-      filteredProducts.value = .from(products);
+      filteredProducts.value = List<ProductModel>.from(products);
     } else {
-      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.toString().contains(searchQuery.value)).toList();
+      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.toLowerCase().contains(searchQuery.value)).toList();
     }
   }
 
@@ -132,7 +132,7 @@ class OrdersController extends GetxController {
         orderedProducts.add(product.copyWith(quantity: 1));
       } else {
         // increment quantity if not exceed stock
-        orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.code == product.code)] = product.copyWith(quantity: orderedProductsCount);
+        orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.id == product.id)] = product.copyWith(quantity: orderedProductsCount);
       }
     } else {
       Get.snackbar('', 'Cannot add more than ${product.quantity} of ${product.name}', colorText: Colors.black, snackPosition: .BOTTOM, backgroundColor: Colors.white, borderRadius: 0, titleText: const SizedBox.shrink());
@@ -144,18 +144,18 @@ class OrdersController extends GetxController {
     orderedProductsCount--;
     if (orderedProductsCount > 0) {
       // decrement quantity until it reaches 0
-      orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.code == product.code)] = product.copyWith(quantity: orderedProductsCount);
+      orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.id == product.id)] = product.copyWith(quantity: orderedProductsCount);
     } else {
       // remove product from cart if quantity is 0
-      orderedProducts.removeAt(orderedProducts.indexWhere((ProductModel p) => p.code == product.code));
+      orderedProducts.removeAt(orderedProducts.indexWhere((ProductModel p) => p.id == product.id));
     }
   }
 
-  ProductModel? orderedProduct(ProductModel product) => orderedProducts.firstWhereOrNull((ProductModel p) => p.code == product.code);
+  ProductModel? orderedProduct(ProductModel product) => orderedProducts.firstWhereOrNull((ProductModel p) => p.id == product.id);
 
   void updateProductQuantity(ProductModel product, int quantity) {
     if (orderedProduct(product) != null) {
-      orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.code == product.code)] = product.copyWith(quantity: quantity);
+      orderedProducts[orderedProducts.indexWhere((ProductModel p) => p.id == product.id)] = product.copyWith(quantity: quantity);
     } else if (quantity != 0) {
       orderedProducts.add(product.copyWith(quantity: quantity));
     }

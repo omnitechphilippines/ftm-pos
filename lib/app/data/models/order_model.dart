@@ -1,6 +1,6 @@
 class OrderModel {
   final String id;
-  final List<int> code;
+  final List<String> code;
   final List<String> name;
   final List<double> originalPrice;
   final List<double> sellingPrice;
@@ -15,7 +15,7 @@ class OrderModel {
 
   factory OrderModel.fromJson(Map<String, dynamic> json) => OrderModel(
     id: json['id'] ?? '',
-    code: List<int>.from(json['code'] ?? <int>[]),
+    code: List<String>.from(json['code'] ?? <String>[]),
     name: List<String>.from(json['name'] ?? <String>[]),
     originalPrice: List<double>.from(json['original_price'] ?? <double>[]),
     sellingPrice: List<double>.from(json['selling_price'] ?? <double>[]),
@@ -41,7 +41,7 @@ class OrderModel {
     'updated_at': updatedAt.toUtc().toIso8601String(),
   };
 
-  OrderModel copyWith({String? id, List<int>? code, List<String>? name, List<double>? originalPrice, List<double>? sellingPrice, List<double>? amount, List<int>? quantity, double? total, DateTime? orderAt, DateTime? createdAt, DateTime? updatedAt}) => OrderModel(
+  OrderModel copyWith({String? id, List<String>? code, List<String>? name, List<double>? originalPrice, List<double>? sellingPrice, List<double>? amount, List<int>? quantity, double? total, DateTime? orderAt, DateTime? createdAt, DateTime? updatedAt}) => OrderModel(
     id: id ?? this.id,
     code: code ?? this.code,
     name: name ?? this.name,

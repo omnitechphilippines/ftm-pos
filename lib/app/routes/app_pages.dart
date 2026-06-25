@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'package:get/get.dart';
 
 import '../modules/dashboard/bindings/dashboard_binding.dart';
@@ -12,6 +14,7 @@ import '../modules/products/bindings/products_binding.dart';
 import '../modules/products/views/products_view.dart';
 import '../modules/reports/bindings/reports_binding.dart';
 import '../modules/reports/views/reports_view.dart';
+import 'app_middlewares.dart';
 
 part 'app_routes.dart';
 
@@ -21,11 +24,11 @@ class AppPages {
   static const String INITIAL = Routes.LOGIN;
 
   static final List<GetPage<dynamic>> routes = <GetPage<dynamic>>[
-    GetPage<dynamic>(name: _Paths.LOGIN, page: () => const LoginView(), binding: LoginBinding()),
+    GetPage<dynamic>(name: _Paths.LOGIN, page: () => const LoginView(), binding: LoginBinding(), middlewares: <GetMiddleware>[GuestMiddleware()]),
     GetPage<dynamic>(name: _Paths.NOT_FOUND, page: () => const NotFoundView(), binding: NotFoundBinding()),
-    GetPage<dynamic>(name: _Paths.DASHBOARD, page: () => const DashboardView(), binding: DashboardBinding()),
-    GetPage<dynamic>(name: _Paths.ORDERS, page: () => const OrdersView(), binding: OrdersBinding()),
-    GetPage<dynamic>(name: _Paths.PRODUCTS, page: () => const ProductsView(), binding: ProductsBinding()),
-    GetPage<dynamic>(name: _Paths.REPORTS, page: () => const ReportsView(), binding: ReportsBinding()),
+    GetPage<dynamic>(name: _Paths.DASHBOARD, page: () => const DashboardView(), binding: DashboardBinding(), middlewares: <GetMiddleware>[AuthMiddleware()]),
+    GetPage<dynamic>(name: _Paths.ORDERS, page: () => const OrdersView(), binding: OrdersBinding(), middlewares: <GetMiddleware>[AuthMiddleware()]),
+    GetPage<dynamic>(name: _Paths.PRODUCTS, page: () => const ProductsView(), binding: ProductsBinding(), middlewares: <GetMiddleware>[AuthMiddleware()]),
+    GetPage<dynamic>(name: _Paths.REPORTS, page: () => const ReportsView(), binding: ReportsBinding(), middlewares: <GetMiddleware>[AuthMiddleware()]),
   ];
 }

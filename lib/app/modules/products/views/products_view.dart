@@ -109,7 +109,7 @@ class ProductsView extends GetView<ProductsController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 const SizedBox(height: 4),
-                Text('Code: ${product.code.toString().padLeft(13, '0')}'),
+                Text('Code: ${product.code}'),
                 Text('Price: ₱ ${numberFormatter.format(product.sellingPrice)}'),
                 Row(
                   children: <Widget>[
@@ -166,7 +166,7 @@ class ProductsView extends GetView<ProductsController> {
 
   void showProductDialog({ProductModel? product, String? code}) {
     controller.isEditingForm.value = product != null;
-    controller.codeController.text = code ?? product?.code.toString() ?? '';
+    controller.codeController.text = code ?? product?.code ?? '';
 
     Get.dialog(
       barrierDismissible: false,
@@ -490,7 +490,7 @@ class ScannerDialog extends StatelessWidget {
                       controller.disposeScanner();
 
                       // Search for existing product
-                      final ProductModel? product = controller.searchProductByCode(int.parse(code));
+                      final ProductModel? product = controller.searchProductByCode(code);
                       Get.back(result: product ?? code);
                       controller.searchQuery.value = code;
                       controller.searchInputController.text = code;

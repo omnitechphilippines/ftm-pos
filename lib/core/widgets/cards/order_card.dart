@@ -49,7 +49,7 @@ class OrderCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text(
-                  '₱ ${product.sellingPrice.toStringAsFixed(2)}',
+                  '₱ ${product.sellingPrice}',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent),
                 ),
                 Row(

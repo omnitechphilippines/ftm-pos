@@ -3,7 +3,7 @@ import 'package:hex/hex.dart';
 
 class ProductModel {
   final String id;
-  final int code;
+  final String code;
   final String name;
   final double originalPrice;
   final double sellingPrice;
@@ -18,7 +18,7 @@ class ProductModel {
 
   factory ProductModel.fromJson(Map<String, dynamic> json) => ProductModel(
     id: json['id'] ?? '',
-    code: json['code'] ?? 0,
+    code: json['code'] ?? '',
     name: json['name'] ?? '',
     originalPrice: (json['original_price'] as num?)?.toDouble() ?? 0.0,
     sellingPrice: (json['selling_price'] as num?)?.toDouble() ?? 0.0,
@@ -44,7 +44,7 @@ class ProductModel {
     'updated_at': updatedAt.toUtc().toIso8601String(),
   };
 
-  ProductModel copyWith({String? id, int? code, String? name, double? sellingPrice, double? originalPrice, int? quantity, String? weight, DateTime? expiryDate, Uint8List? image, DateTime? createdAt, DateTime? updatedAt}) => ProductModel(
+  ProductModel copyWith({String? id, String? code, String? name, double? sellingPrice, double? originalPrice, int? quantity, String? weight, DateTime? expiryDate, Uint8List? image, DateTime? createdAt, DateTime? updatedAt}) => ProductModel(
     id: id ?? this.id,
     code: code ?? this.code,
     name: name ?? this.name,

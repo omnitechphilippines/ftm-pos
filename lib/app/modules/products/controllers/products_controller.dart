@@ -78,7 +78,7 @@ class ProductsController extends GetxController {
     if (searchQuery.value.isEmpty) {
       filteredProducts.value = products;
     } else {
-      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.toString().contains(searchQuery.value)).toList();
+      filteredProducts.value = products.where((ProductModel product) => product.name.toLowerCase().contains(searchQuery.value.toLowerCase()) || product.code.toLowerCase().contains(searchQuery.value)).toList();
     }
   }
 
@@ -126,7 +126,7 @@ class ProductsController extends GetxController {
 
       final ProductModel product = ProductModel(
         id: const Uuid().v4(),
-        code: int.parse(codeController.text),
+        code: codeController.text,
         name: nameController.text.trim(),
         originalPrice: double.parse(originalPriceController.text),
         sellingPrice: double.parse(sellingPriceController.text),
@@ -167,7 +167,7 @@ class ProductsController extends GetxController {
 
       final ProductModel updatedProduct = ProductModel(
         id: productId,
-        code: int.parse(codeController.text),
+        code: codeController.text,
         name: nameController.text.trim(),
         sellingPrice: double.parse(sellingPriceController.text),
         originalPrice: double.parse(originalPriceController.text),
@@ -221,7 +221,7 @@ class ProductsController extends GetxController {
   }
 
   /// Search product by barcode
-  ProductModel? searchProductByCode(int code) => products.firstWhereOrNull((ProductModel product) => product.code == code);
+  ProductModel? searchProductByCode(String code) => products.firstWhereOrNull((ProductModel product) => product.code == code);
 
   /// Load product data into form for editing
   void loadProductToForm(ProductModel product) {
