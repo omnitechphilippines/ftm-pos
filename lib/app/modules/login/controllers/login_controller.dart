@@ -11,9 +11,9 @@ class LoginController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
 
   final GlobalKey<FormState> formKeyLogin = GlobalKey<FormState>();
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController userNameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final FocusNode emailFocus = FocusNode();
+  final FocusNode userNameFocus = FocusNode();
   final FocusNode passwordFocus = FocusNode();
   final RxBool showPassword = false.obs;
   final Rx<PackageInfo?> packageInfo = Rx<PackageInfo?>(null);
@@ -56,20 +56,20 @@ class LoginController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    emailFocus.requestFocus();
+    userNameFocus.requestFocus();
   }
 
   Future<void> _fetchPackageInfo() async => packageInfo.value = await PackageInfo.fromPlatform();
 
   void get toggleShowPassword => showPassword.toggle();
 
-  void get handleSubmit => _authService.login(emailController.text.trim(), passwordController.text.trim());
+  void get handleSubmit => _authService.login(userNameController.text.trim(), passwordController.text.trim());
 
   @override
   void onClose() {
-    emailController.dispose();
+    userNameController.dispose();
     passwordController.dispose();
-    emailFocus.dispose();
+    userNameFocus.dispose();
     passwordFocus.dispose();
     super.onClose();
   }

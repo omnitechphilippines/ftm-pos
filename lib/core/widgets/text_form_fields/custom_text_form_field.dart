@@ -41,9 +41,10 @@ class CustomTextFormField extends StatelessWidget {
       obscureText: obscureText,
       onChanged: onChanged,
       decoration: InputDecoration(
+        constraints: const BoxConstraints(maxHeight: 40.0, minHeight: 40.0),
         prefixIcon: prefixIcon,
         hintText: hintText,
-        hintStyle: TextStyle(color: hintColor),
+        hintStyle: TextStyle(color: hintColor, fontSize: 14),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
           borderSide: BorderSide(color: enabledBorderColor),

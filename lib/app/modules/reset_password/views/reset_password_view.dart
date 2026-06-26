@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/text_form_fields/custom_text_form_field.dart';
-import '../controllers/login_controller.dart';
+import '../../../routes/app_pages.dart';
+import '../controllers/reset_password_controller.dart';
 
-class LoginView extends GetView<LoginController> {
-  const LoginView({super.key});
-
+class ResetPasswordView extends GetView<ResetPasswordController> {
+  const ResetPasswordView({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,16 +26,15 @@ class LoginView extends GetView<LoginController> {
                       child: Container(margin: const EdgeInsets.all(16), child: Image.asset('assets/images/logo.png')),
                     ),
                     const Text('Point of Sale', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-                    SizedBox(width: 450, child: LoginCard(controller: controller)),
+                    SizedBox(width: 450, child: ResetPasswordCard(controller: controller)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        const Text('New user?', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                        const Text('Back to', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                         const SizedBox(width: 8),
                         InkWell(
-                          // onTap: () => Get.offNamed(Routes.SIGN_UP),
-                          onTap: () {},
-                          child: const Text('Sign Up', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          onTap: () => Get.offNamed(Routes.LOGIN),
+                          child: const Text('Sign In', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                         ),
                       ],
                     ),
@@ -57,10 +57,10 @@ class LoginView extends GetView<LoginController> {
   }
 }
 
-class LoginCard extends StatelessWidget {
-  const LoginCard({super.key, required this.controller});
+class ResetPasswordCard extends StatelessWidget {
+  const ResetPasswordCard({super.key, required this.controller});
 
-  final LoginController controller;
+  final ResetPasswordController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -70,12 +70,12 @@ class LoginCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
         child: Form(
-          key: controller.formKeyLogin,
+          key: controller.formKeyReset,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               const SizedBox(height: 16),
-              const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text('Reset Password', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               const Row(
                 children: <Widget>[Text('Username', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500))],
@@ -108,7 +108,7 @@ class LoginCard extends StatelessWidget {
                 () => CustomTextFormField(
                   controller: controller.passwordController,
                   focusNode: controller.passwordFocus,
-                  onEditingComplete: () => controller.formKeyLogin.currentState!.validate() ? controller.handleSubmit : null,
+                  onEditingComplete: () => controller.formKeyReset.currentState!.validate() ? controller.handleSubmit : null,
                   obscureText: !controller.showPassword.value,
                   onChanged: (String value) => controller.isPasswordEmpty.value = value.isEmpty,
                   prefixIcon: const Icon(Icons.lock),
@@ -127,7 +127,7 @@ class LoginCard extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => controller.formKeyLogin.currentState!.validate() ? controller.handleSubmit : null,
+                onPressed: () => controller.formKeyReset.currentState!.validate() ? controller.handleSubmit : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.info,
                   minimumSize: const Size(100, 50),
@@ -135,7 +135,7 @@ class LoginCard extends StatelessWidget {
                 ),
                 child: const Center(
                   child: Text(
-                    'Sign In',
+                    'Reset Password',
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                 ),
