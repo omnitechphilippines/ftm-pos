@@ -100,7 +100,7 @@ class ProductsController extends GetxController {
   /// Pick image from gallery
   Future<void> pickImageFromGallery() async {
     try {
-      final FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
 
       if (result != null && result.files.isNotEmpty) {
         final Uint8List? imageBytes = result.files.single.bytes;
