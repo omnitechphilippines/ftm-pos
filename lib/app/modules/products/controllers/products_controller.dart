@@ -100,13 +100,12 @@ class ProductsController extends GetxController {
   /// Pick image from gallery
   Future<void> pickImageFromGallery() async {
     try {
-      final FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+      final FilePickerResult? result = await FilePicker.pickFiles(type: FileType.image);
 
       if (result != null && result.files.isNotEmpty) {
-        final Uint8List? imageBytes = result.files.single.bytes;
+        final Uint8List? imageBytes = result.files.first.bytes;
         if (imageBytes != null) {
           selectedImage.value = imageBytes;
-          Get.snackbar('Success', 'Image selected successfully', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white, borderRadius: 0);
         }
       }
     } catch (e) {
